@@ -1,5 +1,364 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import "tailwindcss";
+
+/* ─── Fonts are loaded via Next.js next/font/google in layout.tsx ────────────
+   Do NOT add @import url() for Google Fonts here — it breaks with Tailwind v4.
+   Fonts arrive as CSS variables: --font-display (Fraunces) --font-ui (Plus Jakarta Sans)
+───────────────────────────────────────────────────────────────────────────────*/
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ALPHANDOM — DESIGN SYSTEM
+   
+   Font strategy (SIMPLE — 2 fonts only):
+   --font-display  → Fraunces        ONLY for: logo "Alpha" italic + hero headline
+   --font-ui       → Plus Jakarta Sans  EVERYTHING else: nav, body, buttons, labels,
+                                         headings, stats, cards, footers — the whole site
+   
+   This means: you only ever think about 1 font. Fraunces appears in 2 places max.
+   
+   Palette: Navy #032655 · Teal #0FB9B1 · White #F5F5F5 · Gray #F3F3F3
+───────────────────────────────────────────────────────────────────────────────*/
+
+:root {
+  /* ── Fonts ── */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-ui:      'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* ── Brand ── */
+  --navy:         #032655;
+  --navy-hover:   #0A356A;
+  --navy-deep:    #021A3B;
+
+  --teal:         #0FB9B1;
+  --teal-hover:   #15C7C0;
+  --teal-deep:    #0A9E97;
+  --teal-mist:    rgba(15,185,177,0.10);
+
+  /* ── Neutrals ── */
+  --white:        #FFFFFF;
+  --off-white:    #F5F5F5;
+  --gray-bg:      #F3F3F3;
+  --blue-tint:    #DCE8F4;
+  --mint-tint:    #D8F0EB;
+
+  /* ── Text ── */
+  --text-primary:  #032655;
+  --text-body:     #1C2E4A;
+  --text-muted:    #5A7A9F;
+  --text-faint:    #96AFCA;
+  --text-on-dark:  #F5F5F5;
+
+  /* ── Borders ── */
+  --border:        #D0DBE8;
+  --border-dark:   #0A356A;
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 4px  rgba(3,38,85,0.08);
+  --shadow-md:   0 4px 16px rgba(3,38,85,0.10);
+  --shadow-lg:   0 12px 40px rgba(3,38,85,0.14);
+  --shadow-teal: 0 4px 20px rgba(15,185,177,0.28);
+
+  /* ── Radius ── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-pill: 999px;
+}
+
+/* ─── Reset ───────────────────────────────────────────────────────────────────*/
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--gray-bg);
+  color: var(--text-body);
+  font-size: 16px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ─── Selection & scrollbar ───────────────────────────────────────────────────*/
+::selection { background: var(--teal); color: #fff; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--gray-bg); }
+::-webkit-scrollbar-thumb { background: var(--teal); border-radius: var(--radius-pill); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMPONENT LAYER
+   All classes use var(--font-ui) EXCEPT .display-* which use var(--font-display)
+─────────────────────────────────────────────────────────────────────────────*/
+@layer components {
+
+  /* ── Display (Fraunces — logo + hero headline ONLY) ────────────────────── */
+  .display-hero {
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 6vw, 6.5rem);
+    font-weight: 300;
+    line-height: 0.97;
+    letter-spacing: -0.025em;
+    color: var(--navy);
+  }
+  .display-italic {
+    font-style: italic;
+    font-weight: 300;
+  }
+  .display-section {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.75rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--navy);
+  }
+
+  /* ── Headings (Plus Jakarta Sans — used everywhere) ────────────────────── */
+  .heading-xl {
+    font-family: var(--font-ui);
+    font-size: clamp(1.6rem, 3vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--navy);
+  }
+  .heading-lg {
+    font-family: var(--font-ui);
+    font-size: clamp(1.25rem, 2.2vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    color: var(--navy);
+  }
+  .heading-md {
+    font-family: var(--font-ui);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+    color: var(--navy);
+  }
+  .heading-sm {
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--navy);
+  }
+
+  /* ── Labels ─────────────────────────────────────────────────────────────── */
+  .label-caps {
+    font-family: var(--font-ui);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .label-md {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ── Body ────────────────────────────────────────────────────────────────── */
+  .body-lg { font-family: var(--font-ui); font-size: 1.0625rem; line-height: 1.75; font-weight: 400; color: var(--text-body); }
+  .body-md { font-family: var(--font-ui); font-size: 0.9375rem; line-height: 1.65; font-weight: 400; color: var(--text-body); }
+  .body-sm { font-family: var(--font-ui); font-size: 0.8125rem; line-height: 1.6;  font-weight: 400; color: var(--text-muted); }
+  .body-xs { font-family: var(--font-ui); font-size: 0.725rem;  line-height: 1.55; font-weight: 400; color: var(--text-faint); }
+
+  /* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+  /* Navy filled — primary */
+  .btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--navy); color: var(--text-on-dark);
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.8rem 1.75rem;
+    border: 2px solid var(--navy); border-radius: var(--radius-md);
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: var(--navy-hover); border-color: var(--navy-hover);
+    transform: translateY(-1px); box-shadow: var(--shadow-md);
+  }
+
+  /* Teal filled — recruiter */
+  .btn-teal {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--teal); color: #fff;
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.8rem 1.75rem;
+    border: 2px solid var(--teal); border-radius: var(--radius-md);
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-teal:hover {
+    background: var(--teal-hover); border-color: var(--teal-hover);
+    transform: translateY(-1px); box-shadow: var(--shadow-teal);
+  }
+
+  /* Outline navy */
+  .btn-outline {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: transparent; color: var(--navy);
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.8rem 1.75rem;
+    border: 2px solid var(--navy); border-radius: var(--radius-md);
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  }
+  .btn-outline:hover {
+    background: var(--navy); color: var(--text-on-dark);
+    transform: translateY(-1px);
+  }
+
+  /* Ghost on dark backgrounds */
+  .btn-ghost-light {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: rgba(255,255,255,0.10); color: #fff;
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.8rem 1.75rem;
+    border: 2px solid rgba(255,255,255,0.30); border-radius: var(--radius-md);
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    backdrop-filter: blur(4px);
+  }
+  .btn-ghost-light:hover {
+    background: rgba(255,255,255,0.20); border-color: rgba(255,255,255,0.55);
+  }
+
+  /* ── Nav ──────────────────────────────────────────────────────────────────── */
+  .nav-link {
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 600;
+    letter-spacing: 0.025em; color: var(--text-muted);
+    text-decoration: none; background: none; border: none;
+    cursor: pointer; padding: 0;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: color 0.15s ease;
+  }
+  .nav-link:hover { color: var(--navy); }
+
+  /* ── Layout ───────────────────────────────────────────────────────────────── */
+  .section-container { max-width: 1280px; margin: 0 auto; padding: 0 2.5rem; }
+  .section-pad       { padding-top: 6rem; padding-bottom: 6rem; }
+
+  /* ── Dividers ─────────────────────────────────────────────────────────────── */
+  .divider       { height: 1px; background: var(--border); width: 100%; }
+  .divider-dark  { height: 1px; background: var(--border-dark); width: 100%; }
+
+  /* Teal gradient bar */
+  .bar-teal {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--teal) 30%, var(--teal-hover) 60%, transparent 100%);
+  }
+
+  /* ── Cards ────────────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover {
+    border-color: var(--teal); box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  /* ── Tags ─────────────────────────────────────────────────────────────────── */
+  .tag {
+    display: inline-block; font-family: var(--font-ui);
+    font-size: 0.625rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: var(--radius-sm);
+    border: 1px solid currentColor;
+  }
+  .tag-teal  { color: var(--teal-deep);  background: var(--mint-tint);  border-color: var(--teal);  }
+  .tag-navy  { color: var(--navy);       background: var(--blue-tint);  border-color: var(--navy);  }
+  .tag-green { color: #0A6460;           background: var(--mint-tint);  border-color: var(--teal);  }
+
+  /* ── Stat numbers ─────────────────────────────────────────────────────────── */
+  /* Uses Fraunces for the large numerics — display moment */
+  .stat-number {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    font-weight: 300; letter-spacing: -0.03em; line-height: 1;
+    color: var(--navy);
+  }
+  .stat-number-teal {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    font-weight: 300; letter-spacing: -0.03em; line-height: 1;
+    color: var(--teal);
+  }
+
+  /* ── Accent elements ──────────────────────────────────────────────────────── */
+  .accent-dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--teal); flex-shrink: 0;
+  }
+  .accent-line-teal {
+    display: inline-block; width: 2.5rem; height: 2px;
+    background: var(--teal); border-radius: var(--radius-pill);
+  }
+
+  /* ── Form inputs ──────────────────────────────────────────────────────────── */
+  .input-base {
+    font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 400;
+    color: var(--text-body); background: var(--white);
+    border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    padding: 0.7rem 1rem; width: 100%; outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input-base::placeholder { color: var(--text-faint); }
+  .input-base:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-mist); }
+
+  .label-field {
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 600;
+    color: var(--navy); letter-spacing: 0.01em;
+    display: block; margin-bottom: 0.4rem;
+  }
+
+  /* ── Animations ───────────────────────────────────────────────────────────── */
+  .fade-up {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  .fade-in {
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .fade-in.visible { opacity: 1; }
+}
+
+/* ─── Tailwind theme bridge ───────────────────────────────────────────────────*/
+@theme {
+  --font-family-display: var(--font-display);
+  --font-family-ui:      var(--font-ui);
+
+  --color-navy:        #032655;
+  --color-navy-hover:  #0A356A;
+  --color-navy-deep:   #021A3B;
+  --color-teal:        #0FB9B1;
+  --color-teal-hover:  #15C7C0;
+  --color-teal-deep:   #0A9E97;
+  --color-off-white:   #F5F5F5;
+  --color-gray-bg:     #F3F3F3;
+  --color-blue-tint:   #DCE8F4;
+  --color-mint-tint:   #D8F0EB;
+  --color-border:      #D0DBE8;
 }
