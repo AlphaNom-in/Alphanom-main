@@ -17,7 +17,7 @@ const RECRUITER_POINTS = [
   'Work on roles that match your domain',
 ]
 
-export default function CTABanner() {
+export default function CTAbanner() {
   const [hovered, setHovered] = useState<'employer' | 'recruiter' | null>(null)
 
   return (
