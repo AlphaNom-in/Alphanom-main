@@ -3,7 +3,7 @@ import HeroSection from "../../components/landing/HeroSection";
 import WhyAlphaNom from "../../components/landing/WhyAlphaNom";
 import TrustedBy from "../../components/landing/TrsutedBy";
 import Testimonials from "../../components/landing/Testimonials";
-import CTAbanner from "../../components/landing/CTAbanner"
+import CTABanner from "../../components/landing/CTAbanner"
 
 
 export default function Home() {
@@ -15,7 +15,7 @@ export default function Home() {
       <WhyAlphaNom />
       <TrustedBy />
       <Testimonials />
-      <CTAbanner/>
+      <CTABanner/>
     </main>
   );
 }
