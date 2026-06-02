@@ -524,7 +524,7 @@ export default function Navbar() {
             {/* Login / Sign Up — split buttons on mobile */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginTop: '1.25rem' }}>
               <Link
-                href="/auth/login"
+                href="/employer/login"
                 onClick={() => setMobileOpen(false)}
                 style={{
                   fontFamily: 'var(--font-ui)',
@@ -545,7 +545,7 @@ export default function Navbar() {
                 Log In
               </Link>
               <Link
-                href="/auth/signup"
+                href="/employer/signup"
                 onClick={() => setMobileOpen(false)}
                 style={{
                   fontFamily: 'var(--font-ui)',
@@ -758,7 +758,7 @@ function LoginSignupButton() {
     >
       {/* Log In */}
       <Link
-        href="/auth/login"
+        href="/employer/login"
         onMouseEnter={() => setLoginHover(true)}
         onMouseLeave={() => setLoginHover(false)}
         style={{
@@ -773,7 +773,7 @@ function LoginSignupButton() {
 
       {/* Sign Up */}
       <Link
-        href="/auth/signup"
+        href="/employer/signup"
         onMouseEnter={() => setSignupHover(true)}
         onMouseLeave={() => setSignupHover(false)}
         style={{

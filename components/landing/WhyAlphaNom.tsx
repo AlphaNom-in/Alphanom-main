@@ -53,13 +53,13 @@ export default function WhyAlphaNom() {
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null)
 
   return (
-    <section style={{ padding: '6rem 0', background: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
+    <section className="why-section" style={{ padding: '6rem 0', background: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
 
       {/* Background */}
       <div style={{ position: 'absolute', top: '-200px', right: '-200px', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(15,185,177,0.07) 0%, transparent 70%)', pointerEvents: 'none' }}/>
       <div style={{ position: 'absolute', bottom: '-150px', left: '-150px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(3,38,85,0.04) 0%, transparent 70%)', pointerEvents: 'none' }}/>
 
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
+      <div className="why-inner" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
@@ -80,10 +80,10 @@ export default function WhyAlphaNom() {
         </div>
 
         {/* Main 2-col layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'center' }}>
+        <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'center' }}>
 
-          {/* LEFT: Visual ecosystem diagram */}
-          <div style={{ position: 'relative' }}>
+          {/* LEFT: Visual ecosystem diagram — hidden on mobile */}
+          <div className="why-diagram" style={{ position: 'relative' }}>
             <EcosystemDiagram />
           </div>
 
@@ -153,11 +153,11 @@ export default function WhyAlphaNom() {
                   A single ecosystem where employers hire faster and recruiters earn more.
                 </p>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <a href="/auth/employer/signup" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#0FB9B1', color: '#fff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '9px', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <a href="/employer/signup" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#0FB9B1', color: '#fff', border: 'none', padding: '0.65rem 1.25rem', borderRadius: '9px', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     For Employers
                     <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                   </a>
-                  <a href="/auth/recruiter/signup" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.18)', padding: '0.65rem 1.25rem', borderRadius: '9px', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                  <a href="/recruiter/signup" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.18)', padding: '0.65rem 1.25rem', borderRadius: '9px', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                     For Recruiters
                   </a>
                 </div>
@@ -169,7 +169,15 @@ export default function WhyAlphaNom() {
 
       <style>{`
         @media (max-width: 960px) {
-          .why-grid { grid-template-columns: 1fr !important; }
+          .why-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+          .why-diagram { display: none !important; }
+        }
+        @media (max-width: 600px) {
+          .why-grid { gap: 1.25rem !important; }
+        }
+        @media (max-width: 480px) {
+          .why-section { padding: 4rem 0 !important; }
+          .why-inner { padding: 0 1.25rem !important; }
         }
       `}</style>
     </section>

@@ -21,13 +21,13 @@ export default function CTASection() {
   const [hovered, setHovered] = useState<'employer' | 'recruiter' | null>(null)
 
   return (
-    <section style={{ padding: '6rem 0', background: '#F4F8FC', position: 'relative', overflow: 'hidden' }}>
+    <section className="cta-section" style={{ padding: '6rem 0', background: '#F4F8FC', position: 'relative', overflow: 'hidden' }}>
 
       {/* Background */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle, rgba(3,38,85,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }}/>
       <div style={{ position: 'absolute', top: '-200px', right: '-200px', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(15,185,177,0.08) 0%, transparent 70%)', pointerEvents: 'none' }}/>
 
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
+      <div className="cta-inner" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
 
         {/* Top label */}
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
@@ -48,7 +48,7 @@ export default function CTASection() {
         </div>
 
         {/* Two path cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
+        <div className="cta-path-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
 
           {/* Employer card */}
           <div
@@ -103,7 +103,7 @@ export default function CTASection() {
 
             {/* CTA */}
             <Link
-              href="/auth/employer/signup"
+              href="/employer/signup"
               style={{
                 fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700,
                 letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -173,7 +173,7 @@ export default function CTASection() {
 
             {/* CTA */}
             <Link
-              href="/auth/recruiter/signup"
+              href="/recruiter/signup"
               style={{
                 fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700,
                 letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -192,11 +192,11 @@ export default function CTASection() {
         </div>
 
         {/* Bottom dark strip */}
-        <div style={{
+        <div className="cta-stats-strip" style={{
           background: '#032655', borderRadius: '20px',
           padding: '2rem 2.5rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: '2rem', flexWrap: 'wrap',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '1rem',
           position: 'relative', overflow: 'hidden',
           boxShadow: '0 20px 50px rgba(3,38,85,0.2)',
         }}>
@@ -204,21 +204,18 @@ export default function CTASection() {
           <div style={{ position: 'absolute', left: '-40px', bottom: '-40px', width: '180px', height: '180px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)', pointerEvents: 'none' }}/>
 
           {[
-            { value: '200+',  label: 'Companies Hiring',  color: '#0FB9B1' },
+            { value: '200+',   label: 'Companies Hiring',  color: '#0FB9B1' },
             { value: '1,500+', label: 'Active Recruiters', color: '#fff'    },
             { value: '8,000+', label: 'Roles Closed',      color: '#0FB9B1' },
-            { value: '95%',   label: 'Success Rate',       color: '#fff'    },
+            { value: '95%',    label: 'Success Rate',       color: '#fff'    },
           ].map((s, i) => (
-            <div key={i} style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '16px', flex: 1, justifyContent: 'center' }}>
-              {i > 0 && <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)', position: 'absolute', left: '-8px' }}/>}
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', fontWeight: 800, color: s.color, margin: 0, lineHeight: 1, letterSpacing: '-0.03em' }}>
-                  {s.value}
-                </p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '5px 0 0' }}>
-                  {s.label}
-                </p>
-              </div>
+            <div key={i} style={{ position: 'relative', zIndex: 1, textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', padding: '0 0.5rem' }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', fontWeight: 800, color: s.color, margin: 0, lineHeight: 1, letterSpacing: '-0.03em' }}>
+                {s.value}
+              </p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '5px 0 0' }}>
+                {s.label}
+              </p>
             </div>
           ))}
         </div>
@@ -227,6 +224,18 @@ export default function CTASection() {
       <style>{`
         @media (max-width: 860px) {
           .cta-path-grid { grid-template-columns: 1fr !important; }
+          .cta-path-grid a { align-self: stretch !important; justify-content: center !important; }
+        }
+        @media (max-width: 640px) {
+          .cta-stats-strip { grid-template-columns: 1fr 1fr !important; padding: 1.5rem !important; gap: 0 !important; }
+          .cta-stats-strip > div { border-left: none !important; padding: 0.75rem !important; }
+          .cta-stats-strip > div:nth-child(2n) { border-left: 1px solid rgba(255,255,255,0.08) !important; }
+          .cta-stats-strip > div:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,0.08) !important; }
+        }
+        @media (max-width: 480px) {
+          .cta-path-grid > div { padding: 1.75rem 1.5rem !important; }
+          .cta-section { padding: 4rem 0 !important; }
+          .cta-inner { padding: 0 1.25rem !important; }
         }
       `}</style>
     </section>

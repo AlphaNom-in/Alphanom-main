@@ -1,7 +1,6 @@
 import './globals.css'
 import { Plus_Jakarta_Sans, Fraunces } from 'next/font/google'
-import Navbar from '@/components/landing/Navbar'
-import Footer from '@/components/landing/footer'
+
 
 /*
   FONT SETUP
@@ -37,11 +36,11 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${plusJakarta.variable} ${fraunces.variable}`}>
-      <body>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-      </body>
+    <body>
+       <main>{children}</main>
+    </body>
+       
+     
     </html>
   )
 }

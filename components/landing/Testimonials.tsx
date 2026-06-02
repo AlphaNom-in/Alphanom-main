@@ -49,7 +49,7 @@ const METRICS = [
 
 export default function SuccessStories() {
   return (
-    <section style={{
+    <section className="ss-section" style={{
       padding: '6rem 0',
       background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F8FF 100%)',
       position: 'relative', overflow: 'hidden',
@@ -60,7 +60,7 @@ export default function SuccessStories() {
       <div style={{ position: 'absolute', bottom: '-120px', right: '-120px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(3,38,85,0.05) 0%, transparent 65%)', pointerEvents: 'none' }}/>
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle, rgba(3,38,85,0.04) 1px, transparent 1px)', backgroundSize: '30px 30px', maskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 10%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 60% 60% at 50% 50%, black 10%, transparent 100%)' }}/>
 
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
+      <div className="ss-inner" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
@@ -81,7 +81,7 @@ export default function SuccessStories() {
         </div>
 
         {/* Main grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '1.25rem', alignItems: 'stretch' }}>
+        <div className="ss-grid" style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '1.25rem', alignItems: 'stretch' }}>
 
           {/* LEFT: Featured */}
           <div style={{
@@ -160,7 +160,7 @@ export default function SuccessStories() {
           </div>
 
           {/* RIGHT: 4 story cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          <div className="ss-right" style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
             {SIDE_STORIES.map((item, i) => (
               <StoryCard key={i} item={item} />
             ))}
@@ -173,7 +173,12 @@ export default function SuccessStories() {
           .ss-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 600px) {
-          .ss-right { grid-template-columns: 1fr 1fr !important; display: grid !important; }
+          .ss-right { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .ss-right { grid-template-columns: 1fr !important; }
+          .ss-section { padding: 4rem 0 !important; }
+          .ss-inner { padding: 0 1.25rem !important; }
         }
       `}</style>
     </section>

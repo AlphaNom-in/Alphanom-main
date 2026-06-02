@@ -57,7 +57,7 @@ export default function HowItWorks() {
   const [hovered, setHovered] = useState<number | null>(null)
 
   return (
-    <section style={{ padding: '6rem 0', background: '#F4F8FC', position: 'relative', overflow: 'hidden' }}>
+    <section className="hiw-section" style={{ padding: '6rem 0', background: '#F4F8FC', position: 'relative', overflow: 'hidden' }}>
 
       {/* Background texture */}
       <div style={{
@@ -71,7 +71,7 @@ export default function HowItWorks() {
         background: 'radial-gradient(circle, rgba(15,185,177,0.08) 0%, transparent 65%)',
       }} />
 
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
+      <div className="hiw-inner" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
@@ -91,10 +91,10 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', position: 'relative' }}>
+        <div className="hiw-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', position: 'relative' }}>
 
-          {/* Connector line behind cards */}
-          <div style={{
+          {/* Connector line behind cards — hidden on mobile */}
+          <div className="hiw-connector" style={{
             position: 'absolute', top: '52px', left: 'calc(12.5% + 24px)', right: 'calc(12.5% + 24px)',
             height: '2px', zIndex: 0,
             background: 'linear-gradient(90deg, #0FB9B1 0%, #D0DBE8 33%, #D0DBE8 66%, #0FB9B1 100%)',
@@ -180,13 +180,13 @@ export default function HowItWorks() {
         </div>
 
         {/* Bottom CTA strip */}
-        <div style={{
+        <div className="hiw-strip" style={{
           marginTop: '3.5rem',
           background: '#032655',
           borderRadius: '20px',
           padding: '2rem 2.5rem',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: '2rem', flexWrap: 'wrap',
+          gap: '1.25rem', flexWrap: 'wrap',
           position: 'relative', overflow: 'hidden',
         }}>
           <div style={{
@@ -202,8 +202,8 @@ export default function HowItWorks() {
               Under 48 hours — guaranteed.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px', flexShrink: 0, position: 'relative', zIndex: 1 }}>
-            <a href="/auth/employer/signup" style={{
+          <div className="hiw-strip-btns" style={{ display: 'flex', gap: '12px', flexShrink: 0, position: 'relative', zIndex: 1 }}>
+            <a href="/employer/signup" style={{
               fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700,
               letterSpacing: '0.1em', textTransform: 'uppercase',
               background: '#0FB9B1', color: '#fff', border: 'none',
@@ -216,7 +216,7 @@ export default function HowItWorks() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </a>
-            <a href="/auth/recruiter/signup" style={{
+            <a href="/recruiter/signup" style={{
               fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700,
               letterSpacing: '0.1em', textTransform: 'uppercase',
               background: 'transparent', color: '#fff',
@@ -233,10 +233,18 @@ export default function HowItWorks() {
 
       <style>{`
         @media (max-width: 900px) {
-          .hiw-grid { grid-template-columns: 1fr 1fr !important; }
+          .hiw-grid { grid-template-columns: 1fr 1fr !important; gap: 1rem !important; }
+          .hiw-connector { display: none !important; }
         }
         @media (max-width: 560px) {
           .hiw-grid { grid-template-columns: 1fr !important; }
+          .hiw-strip { flex-direction: column !important; align-items: flex-start !important; padding: 1.5rem !important; }
+          .hiw-strip-btns { width: 100% !important; display: flex !important; }
+          .hiw-strip-btns a { flex: 1 !important; justify-content: center !important; }
+        }
+        @media (max-width: 480px) {
+          .hiw-section { padding: 4rem 0 !important; }
+          .hiw-inner { padding: 0 1.25rem !important; }
         }
       `}</style>
     </section>

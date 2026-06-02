@@ -166,7 +166,7 @@ export default function HeroSection() {
               ...anim(0.3),
             }}>
               <IdentityButton
-                href="/auth/employer/signup"
+                href="/employer/signup"
                 label="I am an Employer"
                 sublabel="Post jobs & manage hiring"
                 bg="#032655" bgHover="#0A356A"
@@ -179,7 +179,7 @@ export default function HeroSection() {
                 }
               />
               <IdentityButton
-                href="/auth/recruiter/signup"
+                href="/recruiter/signup"
                 label="I am a Recruiter"
                 sublabel="Submit candidates & earn"
                 bg="#0FB9B1" bgHover="#0A9E97"
@@ -197,7 +197,7 @@ export default function HeroSection() {
                 fontWeight: 400, color: '#96AFCA', textAlign: 'center',
               }}>
                 Already have an account?{' '}
-                <Link href="/auth/login" style={{
+                <Link href="/employer/login" style={{
                   color: '#032655', fontWeight: 600, textDecoration: 'none',
                   borderBottom: '1px solid #D0DBE8',
                 }}>
