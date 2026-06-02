@@ -1,238 +1,232 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 
-const STATS = [
-  {
-    value: '200+',
-    label: 'Companies Hiring'
-  },
-  {
-    value: '1,500+',
-    label: 'Active Recruiters'
-  },
-  {
-    value: '8,000+',
-    label: 'Roles Closed'
-  }
+const EMPLOYER_POINTS = [
+  'Access 1,500+ specialist recruiters instantly',
+  'First candidates arrive within 48 hours',
+  'Pay only when you hire — zero upfront cost',
+  'Real-time dashboard to track every submission',
+]
+
+const RECRUITER_POINTS = [
+  'Browse 200+ verified, active job briefs',
+  'Submit candidates with one click',
+  'Transparent fee structure, fast payouts',
+  'Work on roles that match your domain',
 ]
 
 export default function CTASection() {
+  const [hovered, setHovered] = useState<'employer' | 'recruiter' | null>(null)
+
   return (
-    <section
-      style={{
-        padding: '5rem 0',
-        background: '#fff',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 2.5rem'
-        }}
-      >
-        <div
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: '32px',
-            background:
-              'linear-gradient(135deg,#032655 0%,#0A356A 60%,#0FB9B1 180%)',
-            padding: '4rem',
-            boxShadow:
-              '0 30px 80px rgba(3,38,85,.18)'
-          }}
-        >
-          {/* Glow Effects */}
+    <section style={{ padding: '6rem 0', background: '#F4F8FC', position: 'relative', overflow: 'hidden' }}>
 
-          <div
-            style={{
-              position: 'absolute',
-              top: '-150px',
-              right: '-150px',
-              width: '350px',
-              height: '350px',
-              borderRadius: '50%',
-              background:
-                'radial-gradient(circle, rgba(15,185,177,.35) 0%, transparent 70%)'
-            }}
-          />
+      {/* Background */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle, rgba(3,38,85,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }}/>
+      <div style={{ position: 'absolute', top: '-200px', right: '-200px', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(15,185,177,0.08) 0%, transparent 70%)', pointerEvents: 'none' }}/>
 
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '-120px',
-              left: '-120px',
-              width: '280px',
-              height: '280px',
-              borderRadius: '50%',
-              background:
-                'radial-gradient(circle, rgba(255,255,255,.08) 0%, transparent 70%)'
-            }}
-          />
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 2.5rem', position: 'relative', zIndex: 2 }}>
 
-          {/* Content */}
-
-          <div
-            style={{
-              position: 'relative',
-              zIndex: 2,
-              textAlign: 'center',
-              maxWidth: '760px',
-              margin: '0 auto'
-            }}
-          >
-            <span
-              style={{
-                color: '#0FB9B1',
-                fontSize: '.75rem',
-                fontWeight: 700,
-                letterSpacing: '.18em',
-                textTransform: 'uppercase'
-              }}
-            >
-              GET STARTED TODAY
+        {/* Top label */}
+        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '1rem' }}>
+            <div style={{ width: '24px', height: '2px', background: '#0FB9B1', borderRadius: '2px' }}/>
+            <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.63rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#0FB9B1' }}>
+              Get Started Today
             </span>
-
-            <h2
-              style={{
-                color: '#fff',
-                fontSize: 'clamp(2.3rem,4vw,4rem)',
-                fontWeight: 800,
-                lineHeight: 1.1,
-                marginTop: '1rem'
-              }}
-            >
-              Ready To Transform
-              <br />
-              Your Hiring Process?
-            </h2>
-
-            <p
-              style={{
-                color: 'rgba(255,255,255,.75)',
-                fontSize: '1rem',
-                lineHeight: 1.8,
-                marginTop: '1rem',
-                maxWidth: '620px',
-                marginInline: 'auto'
-              }}
-            >
-              Employers discover exceptional talent faster.
-              Recruiters unlock new opportunities and grow
-              their placement earnings through AlphaNom.
-            </p>
-
-            {/* CTA Buttons */}
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '1rem',
-                flexWrap: 'wrap',
-                marginTop: '2rem'
-              }}
-            >
-              <Link
-                href="/auth/employer/signup"
-                style={{
-                  background: '#fff',
-                  color: '#032655',
-                  padding: '1rem 1.6rem',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                Join As Employer
-
-                <svg
-                  width="14"
-                  height="14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M5 12h14M13 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              <Link
-                href="/auth/recruiter/signup"
-                style={{
-                  background: 'transparent',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,.15)',
-                  padding: '1rem 1.6rem',
-                  borderRadius: '12px',
-                  textDecoration: 'none',
-                  fontWeight: 700
-                }}
-              >
-                Join As Recruiter
-              </Link>
-            </div>
+            <div style={{ width: '24px', height: '2px', background: '#0FB9B1', borderRadius: '2px' }}/>
           </div>
+          <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 800, color: '#032655', letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 1rem' }}>
+            Two Paths.<br/>
+            <span style={{ color: '#0FB9B1' }}>One Platform.</span>
+          </h2>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.9375rem', color: '#5A7A9F', lineHeight: 1.7, maxWidth: '480px', margin: '0 auto' }}>
+            Whether you're hiring or placing candidates — AlphaNom is built to make your side of the table more productive.
+          </p>
+        </div>
 
-          {/* Stats */}
+        {/* Two path cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
 
+          {/* Employer card */}
           <div
-            className="cta-stats"
+            onMouseEnter={() => setHovered('employer')}
+            onMouseLeave={() => setHovered(null)}
             style={{
-              marginTop: '3rem',
-              paddingTop: '2rem',
-              borderTop: '1px solid rgba(255,255,255,.08)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3,1fr)',
-              gap: '1rem',
-              position: 'relative',
-              zIndex: 2
+              background: hovered === 'employer' ? '#032655' : '#fff',
+              border: `1px solid ${hovered === 'employer' ? '#032655' : '#DCE8F4'}`,
+              borderRadius: '24px', padding: '2.5rem',
+              boxShadow: hovered === 'employer' ? '0 24px 60px rgba(3,38,85,0.25)' : '0 4px 20px rgba(3,38,85,0.06)',
+              transform: hovered === 'employer' ? 'translateY(-4px)' : 'translateY(0)',
+              transition: 'all 0.3s ease', cursor: 'default',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', gap: '1.75rem',
             }}
           >
-            {STATS.map((item) => (
-              <div
-                key={item.label}
-                style={{
-                  textAlign: 'center'
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '2rem',
-                    fontWeight: 800,
-                    color: '#fff'
-                  }}
-                >
-                  {item.value}
-                </div>
+            <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '220px', height: '220px', borderRadius: '50%', background: hovered === 'employer' ? 'radial-gradient(circle, rgba(15,185,177,0.15) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(3,38,85,0.04) 0%, transparent 70%)', pointerEvents: 'none', transition: 'background 0.3s ease' }}/>
 
-                <div
-                  style={{
-                    color: 'rgba(255,255,255,.65)',
-                    fontSize: '.85rem'
-                  }}
-                >
-                  {item.label}
-                </div>
+            {/* Icon + badge */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: hovered === 'employer' ? 'rgba(15,185,177,0.15)' : '#EEF5FF', border: `1px solid ${hovered === 'employer' ? 'rgba(15,185,177,0.3)' : '#DCE8F4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: hovered === 'employer' ? '#0FB9B1' : '#032655', transition: 'all 0.3s ease' }}>
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18h16.5a1.5 1.5 0 011.5 1.5v11.25a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V4.5a1.5 1.5 0 011.5-1.5z"/>
+                </svg>
               </div>
-            ))}
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: hovered === 'employer' ? '#0FB9B1' : '#5A7A9F', background: hovered === 'employer' ? 'rgba(15,185,177,0.12)' : '#EEF5FF', border: `1px solid ${hovered === 'employer' ? 'rgba(15,185,177,0.3)' : '#DCE8F4'}`, borderRadius: '6px', padding: '4px 10px', transition: 'all 0.3s ease' }}>
+                For Employers
+              </span>
+            </div>
+
+            {/* Headline */}
+            <div>
+              <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.4rem', fontWeight: 800, color: hovered === 'employer' ? '#fff' : '#032655', letterSpacing: '-0.025em', lineHeight: 1.2, margin: '0 0 0.75rem', transition: 'color 0.3s ease' }}>
+                Hire Faster,<br/>Hire Smarter.
+              </h3>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', color: hovered === 'employer' ? 'rgba(255,255,255,0.65)' : '#5A7A9F', lineHeight: 1.7, margin: 0, transition: 'color 0.3s ease' }}>
+                Stop sifting through hundreds of resumes. Let specialist recruiters do the heavy lifting.
+              </p>
+            </div>
+
+            {/* Points */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {EMPLOYER_POINTS.map((pt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0, background: hovered === 'employer' ? 'rgba(15,185,177,0.2)' : '#EEF5FF', border: `1px solid ${hovered === 'employer' ? 'rgba(15,185,177,0.4)' : '#DCE8F4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px', transition: 'all 0.3s ease' }}>
+                    <svg width="9" height="9" fill="none" stroke={hovered === 'employer' ? '#0FB9B1' : '#032655'} strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                  </div>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: hovered === 'employer' ? 'rgba(255,255,255,0.75)' : '#3D5A7A', margin: 0, lineHeight: 1.5, transition: 'color 0.3s ease' }}>{pt}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <Link
+              href="/auth/employer/signup"
+              style={{
+                fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                background: hovered === 'employer' ? '#0FB9B1' : '#032655',
+                color: '#fff', border: 'none',
+                padding: '0.85rem 1.5rem', borderRadius: '10px',
+                textDecoration: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                transition: 'background 0.3s ease', alignSelf: 'flex-start',
+              }}
+            >
+              Join as Employer
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </Link>
           </div>
+
+          {/* Recruiter card */}
+          <div
+            onMouseEnter={() => setHovered('recruiter')}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              background: hovered === 'recruiter' ? '#032655' : '#fff',
+              border: `1px solid ${hovered === 'recruiter' ? '#032655' : '#DCE8F4'}`,
+              borderRadius: '24px', padding: '2.5rem',
+              boxShadow: hovered === 'recruiter' ? '0 24px 60px rgba(3,38,85,0.25)' : '0 4px 20px rgba(3,38,85,0.06)',
+              transform: hovered === 'recruiter' ? 'translateY(-4px)' : 'translateY(0)',
+              transition: 'all 0.3s ease', cursor: 'default',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', gap: '1.75rem',
+            }}
+          >
+            <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '220px', height: '220px', borderRadius: '50%', background: hovered === 'recruiter' ? 'radial-gradient(circle, rgba(15,185,177,0.15) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(3,38,85,0.04) 0%, transparent 70%)', pointerEvents: 'none', transition: 'background 0.3s ease' }}/>
+
+            {/* Icon + badge */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: hovered === 'recruiter' ? 'rgba(15,185,177,0.15)' : '#EEF5FF', border: `1px solid ${hovered === 'recruiter' ? 'rgba(15,185,177,0.3)' : '#DCE8F4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: hovered === 'recruiter' ? '#0FB9B1' : '#032655', transition: 'all 0.3s ease' }}>
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                </svg>
+              </div>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: hovered === 'recruiter' ? '#0FB9B1' : '#5A7A9F', background: hovered === 'recruiter' ? 'rgba(15,185,177,0.12)' : '#EEF5FF', border: `1px solid ${hovered === 'recruiter' ? 'rgba(15,185,177,0.3)' : '#DCE8F4'}`, borderRadius: '6px', padding: '4px 10px', transition: 'all 0.3s ease' }}>
+                For Recruiters
+              </span>
+            </div>
+
+            {/* Headline */}
+            <div>
+              <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.4rem', fontWeight: 800, color: hovered === 'recruiter' ? '#fff' : '#032655', letterSpacing: '-0.025em', lineHeight: 1.2, margin: '0 0 0.75rem', transition: 'color 0.3s ease' }}>
+                More Placements,<br/>More Earnings.
+              </h3>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', color: hovered === 'recruiter' ? 'rgba(255,255,255,0.65)' : '#5A7A9F', lineHeight: 1.7, margin: 0, transition: 'color 0.3s ease' }}>
+                Access verified jobs from top companies. Submit candidates and get paid — it's that simple.
+              </p>
+            </div>
+
+            {/* Points */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {RECRUITER_POINTS.map((pt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0, background: hovered === 'recruiter' ? 'rgba(15,185,177,0.2)' : '#EEF5FF', border: `1px solid ${hovered === 'recruiter' ? 'rgba(15,185,177,0.4)' : '#DCE8F4'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px', transition: 'all 0.3s ease' }}>
+                    <svg width="9" height="9" fill="none" stroke={hovered === 'recruiter' ? '#0FB9B1' : '#032655'} strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                  </div>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: hovered === 'recruiter' ? 'rgba(255,255,255,0.75)' : '#3D5A7A', margin: 0, lineHeight: 1.5, transition: 'color 0.3s ease' }}>{pt}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <Link
+              href="/auth/recruiter/signup"
+              style={{
+                fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                background: hovered === 'recruiter' ? '#0FB9B1' : '#032655',
+                color: '#fff', border: 'none',
+                padding: '0.85rem 1.5rem', borderRadius: '10px',
+                textDecoration: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                transition: 'background 0.3s ease', alignSelf: 'flex-start',
+              }}
+            >
+              Join as Recruiter
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </Link>
+          </div>
+        </div>
+
+        {/* Bottom dark strip */}
+        <div style={{
+          background: '#032655', borderRadius: '20px',
+          padding: '2rem 2.5rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '2rem', flexWrap: 'wrap',
+          position: 'relative', overflow: 'hidden',
+          boxShadow: '0 20px 50px rgba(3,38,85,0.2)',
+        }}>
+          <div style={{ position: 'absolute', right: '-60px', top: '-60px', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(15,185,177,0.12) 0%, transparent 70%)', pointerEvents: 'none' }}/>
+          <div style={{ position: 'absolute', left: '-40px', bottom: '-40px', width: '180px', height: '180px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)', pointerEvents: 'none' }}/>
+
+          {[
+            { value: '200+',  label: 'Companies Hiring',  color: '#0FB9B1' },
+            { value: '1,500+', label: 'Active Recruiters', color: '#fff'    },
+            { value: '8,000+', label: 'Roles Closed',      color: '#0FB9B1' },
+            { value: '95%',   label: 'Success Rate',       color: '#fff'    },
+          ].map((s, i) => (
+            <div key={i} style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '16px', flex: 1, justifyContent: 'center' }}>
+              {i > 0 && <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)', position: 'absolute', left: '-8px' }}/>}
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', fontWeight: 800, color: s.color, margin: 0, lineHeight: 1, letterSpacing: '-0.03em' }}>
+                  {s.value}
+                </p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', margin: '5px 0 0' }}>
+                  {s.label}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .cta-stats {
-            grid-template-columns: 1fr !important;
-          }
+      <style>{`
+        @media (max-width: 860px) {
+          .cta-path-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </section>

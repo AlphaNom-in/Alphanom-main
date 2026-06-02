@@ -13,9 +13,9 @@ export default function Home() {
       <HeroSection />
       <HowItWorks />
       <WhyAlphaNom />
-      {/* <TrustedBy /> */}
+      <TrustedBy />
       <Testimonials />
-      {/* <CTABanner/> */}
+      <CTABanner/>
     </main>
   );
 }
