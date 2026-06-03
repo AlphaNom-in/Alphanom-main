@@ -1,5 +1,6 @@
 export default function Page() {
   return (
+    <div style={{ height: '100%', overflowY: 'auto', minHeight: 0 }}>
     <div style={{ maxWidth: '680px' }}>
       <div style={{
         background: '#fff',
@@ -51,6 +52,7 @@ export default function Page() {
           </p>
         </div>
       </div>
+    </div>
     </div>
   )
 }

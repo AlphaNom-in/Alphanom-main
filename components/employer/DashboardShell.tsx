@@ -197,7 +197,7 @@ export default function DashboardShell({
       </aside>
 
       {/* ── Right panel ─────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'clip' }}>
 
         {/* Header */}
         <header style={{
@@ -209,8 +209,6 @@ export default function DashboardShell({
           justifyContent: 'space-between',
           padding: '0 1.75rem',
           flexShrink: 0,
-          position: 'sticky',
-          top: 0,
           zIndex: 10,
         }}>
           <div>
@@ -268,7 +266,7 @@ export default function DashboardShell({
         </header>
 
         {/* Content */}
-        <main style={{ flex: 1, padding: '1.75rem', overflow: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <main style={{ flex: 1, padding: '1.75rem', overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {children}
         </main>
       </div>

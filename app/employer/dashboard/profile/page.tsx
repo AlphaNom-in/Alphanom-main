@@ -53,7 +53,7 @@ export default function ProfilePage() {
     .slice(0, 2)
 
   return (
-    <div style={{ maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '1.5rem' }}>
 
       {/* ── Profile header card ──────────────────────────────────────── */}
       <div style={{
@@ -65,7 +65,7 @@ export default function ProfilePage() {
           <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
         </div>
 
-        <div style={{ padding: '0 1.75rem 1.75rem' }}>
+        <div style={{ padding: '2.5rem 1.75rem 1.75rem' }}>
           {/* Avatar + name row */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1.25rem', marginTop: '-32px', marginBottom: '1rem' }}>
             {/* Static initials avatar */}

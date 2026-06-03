@@ -210,7 +210,7 @@ export default function DashboardShell({
           flex-direction: column;
           min-width: 0;
           height: 100vh;
-          overflow: hidden;
+          overflow-x: hidden;
         }
         .rdash-header {
           height: 60px;
@@ -227,7 +227,7 @@ export default function DashboardShell({
         .rdash-main {
           flex: 1;
           padding: 1.75rem;
-          overflow: hidden;
+          overflow-y: auto;
           min-height: 0;
           display: flex;
           flex-direction: column;
@@ -288,7 +288,7 @@ export default function DashboardShell({
           }
           .rdash-main {
             padding: 1rem;
-            overflow: visible;
+            overflow-y: auto;
             height: auto;
             min-height: 0;
           }
