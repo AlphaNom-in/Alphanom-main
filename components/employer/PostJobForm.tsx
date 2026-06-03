@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createJob } from '../../lib/jobs/createJobs'
+import { DEPARTMENTS } from '../../lib/constants/departments'
 
 export default function PostJobForm() {
   const router = useRouter()
@@ -63,12 +64,20 @@ export default function PostJobForm() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Field label="Department">
-              <input
+              <select
                 style={input}
-                placeholder="e.g. Product"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-              />
+              >
+                <option value="">Select Department</option>
+                {DEPARTMENTS.map((group) => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.items.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </Field>
             <Field label="Location">
               <input

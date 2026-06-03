@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginRecruiter } from '@/lib/auth/recruiter'
+import RoleTabs from '@/components/auth/RoleTabs'
 
 export default function RecruiterLoginPage() {
   const router = useRouter()
@@ -97,6 +98,8 @@ export default function RecruiterLoginPage() {
             <span style={{ fontFamily:'var(--font-ui)', fontWeight:800, fontSize:'0.95rem', color:'#032655', letterSpacing:'-0.02em' }}>AlphaNom</span>
           </Link>
         </div>
+
+        <RoleTabs active="recruiter" mode="login" />
 
         <div className="auth-form-wrap">
 
@@ -199,21 +202,10 @@ export default function RecruiterLoginPage() {
               <div style={{ flex:1, height:'1px', background:'#E8EDF5' }}/>
             </div>
 
-            {/* Switch portal */}
-            <Link href="/employer/login" style={{
-              display:'flex', alignItems:'center', justifyContent:'center', gap:'7px',
-              padding:'0.75rem',
-              background:'transparent', border:'1px solid #D0DBE8',
-              borderRadius:'10px', textDecoration:'none',
-              fontFamily:'var(--font-ui)',
-              fontSize:'0.7rem', fontWeight:600,
-              color:'#5A7A9F', letterSpacing:'0.04em',
-            }}>
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18h16.5a1.5 1.5 0 011.5 1.5v11.25a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V4.5a1.5 1.5 0 011.5-1.5z"/>
-              </svg>
-              Login as Employer instead
-            </Link>
+            <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.75rem', color:'#96AFCA', textAlign:'center', margin:0 }}>
+              New here?{' '}
+              <Link href="/recruiter/signup" style={{ color:'#0FB9B1', fontWeight:700, textDecoration:'none' }}>Create a free account</Link>
+            </p>
           </form>
         </div>
       </div>

@@ -81,7 +81,7 @@ export default function DashboardShell({
   ]
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F8FC' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F5F8FC' }}>
 
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside style={{
@@ -197,7 +197,7 @@ export default function DashboardShell({
       </aside>
 
       {/* ── Right panel ─────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
 
         {/* Header */}
         <header style={{
@@ -268,7 +268,7 @@ export default function DashboardShell({
         </header>
 
         {/* Content */}
-        <main style={{ flex: 1, padding: '1.75rem', overflowY: 'auto' }}>
+        <main style={{ flex: 1, padding: '1.75rem', overflow: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {children}
         </main>
       </div>

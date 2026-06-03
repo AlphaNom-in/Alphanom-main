@@ -2,101 +2,413 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 import LogoutButton from '../employer/LogoutButton'
+
+function getInitials(name: string) {
+  return name.split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
+const PAGE_TITLES: Record<string, string> = {
+  '/recruiter/dashboard':                  'Overview',
+  '/recruiter/dashboard/all-jobs':         'All Jobs',
+  '/recruiter/dashboard/my-jobs':          'Saved Jobs',
+  '/recruiter/dashboard/helpdesk':         'Helpdesk',
+  '/recruiter/dashboard/profile':          'My Profile',
+  '/recruiter/dashboard/profile/complete': 'Complete Profile',
+}
+
+function ProfileMenu({ name }: { name: string }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onOut(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onOut)
+    return () => document.removeEventListener('mousedown', onOut)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          background: '#EEF3F8', border: '1px solid #D0DBE8',
+          borderRadius: '9px', padding: '4px 10px 4px 4px', cursor: 'pointer',
+        }}
+      >
+        <div style={{
+          width: '28px', height: '28px', borderRadius: '7px',
+          background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>
+            {getInitials(name)}
+          </span>
+        </div>
+        <span className="rdash-profile-name" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {name || 'My Account'}
+        </span>
+        <svg width="11" height="11" fill="none" stroke="#5A7A9F" strokeWidth={2} viewBox="0 0 24 24"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+          background: '#fff', border: '1px solid #D0DBE8', borderRadius: '14px',
+          boxShadow: '0 8px 32px rgba(3,38,85,0.10)', minWidth: '190px', overflow: 'hidden', zIndex: 200,
+        }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid #EEF3F8' }}>
+            <p style={{ fontSize: '13px', fontWeight: 700, color: '#032655', margin: 0 }}>{name}</p>
+            <p style={{ fontSize: '11px', color: '#96AFCA', margin: '2px 0 0' }}>Recruiter</p>
+          </div>
+          <Link href="/recruiter/dashboard/profile" onClick={() => setOpen(false)}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 16px', textDecoration: 'none', color: '#032655', fontSize: '13px', fontWeight: 500 }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            My Profile
+          </Link>
+          <div style={{ padding: '8px 10px', borderTop: '1px solid #EEF3F8' }}>
+            <LogoutButton />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const NAV = [
+  {
+    label: 'Overview', href: '/recruiter/dashboard', exact: true,
+    icon: <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>,
+  },
+  {
+    label: 'All Jobs', href: '/recruiter/dashboard/all-jobs', exact: false,
+    icon: <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>,
+  },
+  {
+    label: 'Saved Jobs', href: '/recruiter/dashboard/my-jobs', exact: false,
+    icon: <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" /></svg>,
+  },
+  {
+    label: 'Helpdesk', href: '/recruiter/dashboard/helpdesk', exact: true,
+    icon: <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>,
+  },
+]
 
 export default function DashboardShell({
   children,
+  recruiterName,
+  earnings = 0,
 }: {
   children: React.ReactNode
+  recruiterName: string
+  earnings?: number
 }) {
   const pathname = usePathname()
+  const [navOpen, setNavOpen] = useState(false)
 
-  const links = [
-    {
-      label: 'Dashboard',
-      href: '/recruiter/dashboard',
-    },
-    {
-      label: 'All Jobs',
-      href: '/recruiter/dashboard/all-jobs',
-    },
-    {
-      label: 'My Jobs',
-      href: '/recruiter/dashboard/my-jobs',
-    },
-    {
-      label: 'Helpdesk',
-      href: '/recruiter/dashboard/helpdesk',
-    },
-    {
-      label: 'Profile',
-      href: '/recruiter/dashboard/profile',
-    },
-  ]
+  // Close nav on route change
+  useEffect(() => { setNavOpen(false) }, [pathname])
+
+  // Prevent body scroll when mobile nav open
+  useEffect(() => {
+    document.body.style.overflow = navOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [navOpen])
+
+  const pageTitle = Object.entries(PAGE_TITLES)
+    .find(([key]) => pathname === key || (!PAGE_TITLES[pathname] && pathname.startsWith(key + '/')))?.[1] ?? 'Dashboard'
+
+  const SidebarContent = () => (
+    <>
+      <div style={{ height: '3px', background: 'linear-gradient(90deg, #032655 0%, #0FB9B1 100%)', flexShrink: 0 }} />
+      <div style={{ padding: '1.25rem 1.25rem 0.875rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.68rem', color: '#fff' }}>AN</span>
+            </div>
+            <div>
+              <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>AlphaNom</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', color: 'rgba(255,255,255,0.38)', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '1px' }}>Recruiter Portal</p>
+            </div>
+          </div>
+          {/* Mobile close button */}
+          <button className="rdash-close-nav" onClick={() => setNavOpen(false)}
+            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'none' }}>
+            <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 1.25rem 0.75rem' }} />
+      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', padding: '0 1.25rem', marginBottom: '5px' }}>Navigation</p>
+
+      <nav style={{ padding: '0 0.625rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {NAV.map((item) => {
+          const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
+          return (
+            <Link key={item.href} href={item.href}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '9px',
+                padding: '11px 10px', borderRadius: '8px', textDecoration: 'none',
+                fontFamily: 'var(--font-ui)', fontSize: '0.9rem',
+                fontWeight: active ? 700 : 500,
+                color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+                background: active ? 'rgba(15,185,177,0.15)' : 'transparent',
+                borderLeft: active ? '2.5px solid #0FB9B1' : '2.5px solid transparent',
+              }}>
+              {item.icon}
+              {item.label}
+              {active && <div style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0 }} />}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div style={{ flex: 1 }} />
+      <div style={{ padding: '0 0.625rem 1.5rem' }}>
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 0.625rem 0.75rem' }} />
+        <LogoutButton />
+      </div>
+    </>
+  )
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        background: '#F5F8FC',
-      }}
-    >
-      <aside
-        style={{
-          width: '260px',
-          background: '#032655',
-          color: '#fff',
-          padding: '2rem',
-        }}
-      >
-        <h2
-          style={{
-            marginBottom: '2rem',
-          }}
-        >
-          AlphaNom
-        </h2>
+    <>
+      <style>{`
+        .rdash-root {
+          display: flex;
+          height: 100vh;
+          overflow: hidden;
+          background: #F5F8FC;
+        }
+        .rdash-sidebar {
+          width: 240px;
+          background: #032655;
+          display: flex;
+          flex-direction: column;
+          flex-shrink: 0;
+          height: 100vh;
+          overflow-y: auto;
+        }
+        .rdash-overlay { display: none; }
+        .rdash-hamburger { display: none; }
+        .rdash-right {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          height: 100vh;
+          overflow: hidden;
+        }
+        .rdash-header {
+          height: 60px;
+          background: #fff;
+          border-bottom: 1px solid #D0DBE8;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 1.75rem;
+          flex-shrink: 0;
+          z-index: 10;
+          gap: 12px;
+        }
+        .rdash-main {
+          flex: 1;
+          padding: 1.75rem;
+          overflow: hidden;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+        }
+        .rdash-earnings { display: flex; align-items: center; gap: 7px; background: #D8F0EB; border: 1px solid rgba(15,185,177,0.4); border-radius: 8px; padding: 5px 12px; }
+        .rdash-close-nav { display: none !important; }
 
-        <nav
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-          }}
-        >
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                padding: '12px 16px',
-                borderRadius: '10px',
-                textDecoration: 'none',
-                color: '#fff',
-                background:
-                  pathname === link.href
-                    ? '#0FB9B1'
-                    : 'transparent',
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-         <div style={{ marginTop: 'auto' }}>
-  <LogoutButton />
-</div>
-      </aside>
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+          .rdash-root {
+            height: auto;
+            min-height: 100vh;
+            overflow: visible;
+            flex-direction: column;
+          }
+          .rdash-sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 280px;
+            height: 100vh;
+            z-index: 150;
+            transform: translateX(-100%);
+            transition: transform 0.28s ease;
+            overflow-y: auto;
+          }
+          .rdash-sidebar.open {
+            transform: translateX(0);
+          }
+          .rdash-overlay {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(3,38,85,0.5);
+            z-index: 140;
+            backdrop-filter: blur(2px);
+          }
+          .rdash-hamburger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: #EEF3F8;
+            border: 1px solid #D0DBE8;
+            cursor: pointer;
+            flex-shrink: 0;
+          }
+          .rdash-right {
+            height: auto;
+            overflow: visible;
+            min-height: 100vh;
+          }
+          .rdash-header {
+            padding: 0 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+          }
+          .rdash-main {
+            padding: 1rem;
+            overflow: visible;
+            height: auto;
+            min-height: 0;
+          }
+          .rdash-earnings { display: none; }
+          .rdash-profile-name { display: none; }
+          .rdash-close-nav { display: flex !important; }
+          .rdash-page-subtitle { display: none; }
+        }
 
-      <main
-        style={{
-          flex: 1,
-          padding: '2rem',
-        }}
-      >
-        {children}
-      </main>
-    </div>
+        /* ── Responsive page layouts ── */
+        @media (max-width: 768px) {
+          .rdash-metrics-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+          }
+          .rdash-two-col {
+            flex-direction: column !important;
+          }
+          .rdash-two-col-sidebar {
+            width: 100% !important;
+            height: auto !important;
+          }
+          .rdash-two-col-main {
+            height: auto !important;
+          }
+          .rdash-overview-bottom {
+            grid-template-columns: 1fr !important;
+          }
+          .rdash-stats-row {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .rdash-page-root {
+            height: auto !important;
+            min-height: 0 !important;
+          }
+          .rdash-scrollable {
+            overflow-y: visible !important;
+            height: auto !important;
+            max-height: none !important;
+          }
+          .rdash-table-wrap {
+            overflow-x: auto;
+          }
+          .rdash-table-wrap table {
+            min-width: 560px;
+          }
+          .rdash-helpdesk-cards {
+            grid-template-columns: 1fr !important;
+          }
+          .rdash-submit-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .rdash-profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .rdash-job-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+          .rdash-job-header-right {
+            width: 100%;
+          }
+        }
+      `}</style>
+
+      <div className="rdash-root">
+
+        {/* Mobile overlay */}
+        {navOpen && <div className="rdash-overlay" onClick={() => setNavOpen(false)} />}
+
+        {/* Sidebar */}
+        <aside className={`rdash-sidebar${navOpen ? ' open' : ''}`}>
+          <SidebarContent />
+        </aside>
+
+        {/* Right panel */}
+        <div className="rdash-right">
+
+          {/* Header */}
+          <header className="rdash-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+              {/* Hamburger */}
+              <button className="rdash-hamburger" onClick={() => setNavOpen(true)}>
+                <svg width="16" height="16" fill="none" stroke="#032655" strokeWidth={2.2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+              </button>
+
+              <div style={{ minWidth: 0 }}>
+                <p className="rdash-page-subtitle" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.13em', textTransform: 'uppercase', color: '#96AFCA', marginBottom: '1px' }}>
+                  Recruiter Dashboard
+                </p>
+                <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: '1rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.02em', lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {pageTitle}
+                </h1>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+              <div className="rdash-earnings">
+                <svg width="13" height="13" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.45rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0A9E97', lineHeight: 1 }}>Est. Earnings</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 800, color: '#032655', lineHeight: 1, marginTop: '1px' }}>
+                    ₹{earnings.toLocaleString('en-IN')}
+                  </p>
+                </div>
+              </div>
+              <ProfileMenu name={recruiterName} />
+            </div>
+          </header>
+
+          {/* Content */}
+          <main className="rdash-main">
+            {children}
+          </main>
+        </div>
+      </div>
+    </>
   )
 }

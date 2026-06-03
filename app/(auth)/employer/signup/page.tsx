@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signUpEmployer } from '@/lib/auth/employer'
+import RoleTabs from '@/components/auth/RoleTabs'
 
 export default function EmployerSignupPage() {
   const router = useRouter()
@@ -109,6 +110,8 @@ export default function EmployerSignupPage() {
             <span style={{ fontFamily:'var(--font-ui)', fontWeight:800, fontSize:'0.95rem', color:'#032655', letterSpacing:'-0.02em' }}>AlphaNom</span>
           </Link>
         </div>
+
+        <RoleTabs active="employer" mode="signup" />
 
         <div className="auth-form-wrap">
 

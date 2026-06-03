@@ -1,260 +1,230 @@
-'use client'
-
-import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import MetricCard from '@/components/employer/MetricCard'
-import { getEmployerProfile } from '@/hooks/useEmployer'
-import { getEmployerDashboardData } from '@/hooks/useEmployerDashboard'
+import { redirect } from 'next/navigation'
 import { isProfileComplete, profileCompletionSteps, profileCompletionPercent } from '@/hooks/useEmployerProfile'
 
-const METRICS = [
-  {
-    key: 'activeJobs',
-    title: 'Active Jobs',
-    color: '#0FB9B1',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
-      </svg>
-    ),
-  },
-  {
-    key: 'candidates',
-    title: 'Total Candidates',
-    color: '#032655',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-      </svg>
-    ),
-  },
-  {
-    key: 'shortlisted',
-    title: 'Shortlisted',
-    color: '#5A7A9F',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    key: 'closedRoles',
-    title: 'Closed Roles',
-    color: '#0A9E97',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-      </svg>
-    ),
-  },
-]
+const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  in_pipeline:     { bg: '#EEF3F8', color: '#5A7A9F',  label: 'In Pipeline' },
+  shortlisted:     { bg: '#D8F0EB', color: '#0A9E97',  label: 'Shortlisted' },
+  saved_for_later: { bg: '#FFF8E7', color: '#B7791F',  label: 'Saved for Later' },
+  hired:           { bg: '#C6F6D5', color: '#276749',  label: 'Hired ✓' },
+  rejected:        { bg: '#FFF5F5', color: '#E53E3E',  label: 'Rejected' },
+}
 
-export default function Page() {
-  const [profile, setProfile] = useState<any>(null)
-  const [metrics, setMetrics] = useState<any>(null)
+export default async function Page() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/employer/login')
 
-  useEffect(() => {
-    async function load() {
-      const [profileData, metricData] = await Promise.all([
-        getEmployerProfile(),
-        getEmployerDashboardData(),
-      ])
-      setProfile(profileData)
-      setMetrics(metricData)
-    }
-    load()
-  }, [])
+  const { data: employer } = await supabase
+    .from('employers').select('*').eq('user_id', user.id).single()
 
-  if (!metrics) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '32px', height: '32px',
-            border: '3px solid #D0DBE8', borderTop: '3px solid #0FB9B1',
-            borderRadius: '50%', margin: '0 auto 10px',
-            animation: 'dashSpin 0.8s linear infinite',
-          }} />
-          <p style={{ fontFamily: 'var(--font-ui)', color: '#96AFCA', fontSize: '0.82rem' }}>Loading…</p>
-          <style>{`@keyframes dashSpin { to { transform: rotate(360deg) } }`}</style>
-        </div>
-      </div>
-    )
+  const { data: jobs } = await supabase
+    .from('job_posts').select('id, title, status').eq('employer_id', employer?.id ?? '')
+
+  const jobIds = jobs?.map((j) => j.id) ?? []
+
+  const [
+    { count: activeJobs },
+    { count: closedRoles },
+    { data: submissions },
+  ] = await Promise.all([
+    supabase.from('job_posts').select('*', { count: 'exact', head: true }).eq('employer_id', employer?.id ?? '').eq('status', 'active'),
+    supabase.from('job_posts').select('*', { count: 'exact', head: true }).eq('employer_id', employer?.id ?? '').eq('status', 'closed'),
+    jobIds.length
+      ? supabase.from('candidate_submissions')
+          .select('id, candidate_name, status, submitted_at, job_post_id')
+          .in('job_post_id', jobIds)
+          .order('submitted_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const totalCandidates = submissions?.length ?? 0
+  const shortlisted = submissions?.filter((s) => s.status === 'shortlisted').length ?? 0
+  const hired = submissions?.filter((s) => s.status === 'hired').length ?? 0
+  const recentSubmissions = (submissions ?? []).slice(0, 8)
+
+  // Job performance: count per job
+  const jobCountMap: Record<string, number> = {}
+  for (const s of submissions ?? []) {
+    jobCountMap[s.job_post_id] = (jobCountMap[s.job_post_id] ?? 0) + 1
   }
+  const hotJobs = (jobs ?? [])
+    .filter((j) => j.status === 'active')
+    .map((j) => ({ ...j, count: jobCountMap[j.id] ?? 0 }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
 
-  const complete = isProfileComplete(profile)
-  const steps = profileCompletionSteps(profile)
-  const pct = profileCompletionPercent(profile)
+  const complete = isProfileComplete(employer)
+  const steps = profileCompletionSteps(employer)
+  const pct = profileCompletionPercent(employer)
+
+  const pipeline = [
+    { label: 'Submitted',   value: totalCandidates, color: '#5A7A9F', bg: '#EEF3F8' },
+    { label: 'Shortlisted', value: shortlisted,      color: '#0A9E97', bg: '#D8F0EB' },
+    { label: 'Hired',       value: hired,            color: '#276749', bg: '#C6F6D5' },
+  ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
 
-      {/* ── Profile incomplete banner ────────────────────────────────── */}
+      {/* Profile banner — fixed */}
       {!complete && (
-        <div style={{
-          background: '#fff',
-          border: '1px solid #D0DBE8',
-          borderLeft: '3px solid #F5A623',
-          borderRadius: '12px',
-          padding: '1rem 1.25rem',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '12px',
-          boxShadow: '0 2px 12px rgba(3,38,85,0.04)',
-        }}>
-          {/* Icon */}
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '9px',
-            background: '#FDF3DC', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg fill="none" stroke="#F5A623" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-            </svg>
-          </div>
-
-          {/* Text + steps */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '12px', flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 700, color: '#032655', marginBottom: '2px' }}>
-                  Complete your profile to unlock job posting
-                </p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#5A7A9F' }}>
-                  Add your industry and company address to start posting jobs to 1,500+ recruiters.
-                </p>
+        <div style={{ flexShrink: 0, background: '#fff', border: '1px solid #D0DBE8', borderLeft: '3px solid #F5A623', borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#032655', marginBottom: '2px' }}>Complete your profile to unlock job posting</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+              <div style={{ flex: 1, height: '4px', background: '#EEF3F8', borderRadius: '99px', overflow: 'hidden', maxWidth: '180px' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: '#F5A623', borderRadius: '99px' }} />
               </div>
-              <Link href="/employer/dashboard/profile" style={{
-                display: 'inline-flex', alignItems: 'center', gap: '5px',
-                padding: '7px 14px', borderRadius: '7px',
-                background: '#032655', color: '#fff',
-                fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700,
-                textDecoration: 'none', whiteSpace: 'nowrap',
-              }}>
-                Complete Profile
-                <svg fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24" style={{ width: '11px', height: '11px' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
-
-            {/* Progress bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ flex: 1, height: '5px', background: '#EEF3F8', borderRadius: '99px', overflow: 'hidden' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: '#0FB9B1', borderRadius: '99px', transition: 'width 0.4s ease' }} />
-              </div>
-              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 700, color: '#5A7A9F', flexShrink: 0 }}>{pct}%</span>
-            </div>
-
-            {/* Step checklist */}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px', flexWrap: 'wrap' }}>
-              {steps.map((step) => (
-                <div key={step.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{
-                    width: '14px', height: '14px', borderRadius: '50%', flexShrink: 0,
-                    background: step.done ? '#D8F0EB' : '#EEF3F8',
-                    border: `1.5px solid ${step.done ? '#0FB9B1' : '#D0DBE8'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {step.done && (
-                      <svg fill="none" stroke="#0A9E97" strokeWidth={2.5} viewBox="0 0 24 24" style={{ width: '8px', height: '8px' }}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    )}
-                  </div>
-                  <span style={{
-                    fontFamily: 'var(--font-ui)', fontSize: '0.68rem',
-                    fontWeight: step.required && !step.done ? 600 : 500,
-                    color: step.done ? '#0A9E97' : step.required ? '#032655' : '#96AFCA',
-                  }}>
-                    {step.label}
-                    {step.required && !step.done && (
-                      <span style={{ color: '#F5A623', marginLeft: '2px' }}>*</span>
-                    )}
-                  </span>
-                </div>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 700, color: '#F5A623' }}>{pct}%</span>
+              {steps.map((s) => (
+                <span key={s.label} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', color: s.done ? '#0A9E97' : '#96AFCA', fontWeight: s.done ? 700 : 400 }}>
+                  {s.done ? '✓' : '○'} {s.label}
+                </span>
               ))}
             </div>
           </div>
+          <Link href="/employer/dashboard/profile" style={{ padding: '7px 14px', borderRadius: '7px', background: '#F5A623', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            Complete Profile →
+          </Link>
         </div>
       )}
 
-      {/* ── Welcome banner ──────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(135deg, #032655 0%, #0a3570 55%, #0FB9B1 100%)',
-        borderRadius: '16px', padding: '1.5rem 2rem',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div aria-hidden style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>
-            Welcome back
-          </p>
-          <h2 style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '1.45rem', color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-            {profile?.company_name ?? 'Your Company'}
-          </h2>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.83rem', color: 'rgba(255,255,255,0.55)', marginBottom: '1.25rem' }}>
-            Here&apos;s your hiring overview for today.
-          </p>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {complete ? (
-              <Link href="/employer/dashboard/jobs/post" style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                padding: '8px 16px', borderRadius: '8px',
-                background: '#0FB9B1', color: '#fff',
-                fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700,
-                textDecoration: 'none',
-              }}>
-                <svg fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24" style={{ width: '12px', height: '12px' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Post a Job
+      {/* Welcome + metrics — fixed */}
+      <div style={{ flexShrink: 0, display: 'grid', gridTemplateColumns: '1fr auto', gap: '14px', alignItems: 'stretch' }}>
+
+        {/* Welcome card */}
+        <div style={{ background: 'linear-gradient(135deg, #032655 0%, #0a3570 60%, #0FB9B1 100%)', borderRadius: '14px', padding: '20px 24px', position: 'relative', overflow: 'hidden' }}>
+          <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative' }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Welcome back</p>
+            <h2 style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '1.25rem', color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: '14px' }}>{employer?.company_name ?? 'Your Company'}</h2>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {complete ? (
+                <Link href="/employer/dashboard/jobs/post" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 14px', borderRadius: '7px', background: '#0FB9B1', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, textDecoration: 'none' }}>
+                  + Post a Job
+                </Link>
+              ) : (
+                <Link href="/employer/dashboard/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 14px', borderRadius: '7px', background: '#F5A623', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, textDecoration: 'none' }}>
+                  Complete Profile
+                </Link>
+              )}
+              <Link href="/employer/dashboard/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 14px', borderRadius: '7px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, textDecoration: 'none' }}>
+                View Jobs
               </Link>
-            ) : (
-              <Link href="/employer/dashboard/profile" style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                padding: '8px 16px', borderRadius: '8px',
-                background: '#F5A623', color: '#fff',
-                fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700,
-                textDecoration: 'none',
-              }}>
-                Complete Profile First
-                <svg fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24" style={{ width: '12px', height: '12px' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            )}
-            <Link href="/employer/dashboard/jobs" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '8px 16px', borderRadius: '8px',
-              background: 'rgba(255,255,255,0.12)', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.2)',
-              fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600,
-              textDecoration: 'none',
-            }}>
-              View Jobs
-            </Link>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Metrics ─────────────────────────────────────────────────── */}
-      <div>
-        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#96AFCA', marginBottom: '10px' }}>
-          Hiring Metrics
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
-          {METRICS.map((m) => (
-            <MetricCard key={m.key} title={m.title} value={metrics[m.key]} icon={m.icon} color={m.color} />
+        {/* Metric cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {[
+            { label: 'Active Jobs',   value: activeJobs ?? 0,   color: '#0FB9B1', bg: '#D8F0EB' },
+            { label: 'Total Candidates', value: totalCandidates,  color: '#032655', bg: '#EEF3F8' },
+            { label: 'Shortlisted',   value: shortlisted,       color: '#0A9E97', bg: '#D8F0EB' },
+            { label: 'Closed Roles',  value: closedRoles ?? 0,  color: '#5A7A9F', bg: '#EEF3F8' },
+          ].map((m) => (
+            <div key={m.label} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #D0DBE8', padding: '14px 16px', minWidth: '120px' }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', color: '#96AFCA', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>{m.label}</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '1.5rem', fontWeight: 800, color: '#032655', lineHeight: 1 }}>{m.value}</p>
+            </div>
           ))}
         </div>
       </div>
 
+      {/* Bottom two-column — scrolls */}
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 320px', gap: '14px' }}>
+
+        {/* Recent Candidates */}
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #D0DBE8', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #EEF3F8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#032655', margin: 0 }}>Recent Candidates</p>
+            <Link href="/employer/dashboard/jobs" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#0FB9B1', fontWeight: 600, textDecoration: 'none' }}>View all →</Link>
+          </div>
+
+          {!recentSubmissions.length ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#96AFCA' }}>No candidates yet</p>
+            </div>
+          ) : (
+            <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ position: 'sticky', top: 0, background: '#F5F8FC', zIndex: 1 }}>
+                  <tr>
+                    {['Candidate', 'Job', 'Status', 'Date'].map((h) => (
+                      <th key={h} style={{ padding: '9px 20px', textAlign: 'left', fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSubmissions.map((s: any, i) => {
+                    const st = STATUS_STYLE[s.status] ?? STATUS_STYLE.in_pipeline
+                    const jobTitle = jobs?.find((j) => j.id === s.job_post_id)?.title ?? '—'
+                    return (
+                      <tr key={s.id} style={{ borderTop: i === 0 ? 'none' : '1px solid #EEF3F8' }}>
+                        <td style={{ padding: '11px 20px', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 600, color: '#032655' }}>{s.candidate_name}</td>
+                        <td style={{ padding: '11px 20px', fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#5A7A9F', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{jobTitle}</td>
+                        <td style={{ padding: '11px 20px' }}>
+                          <span style={{ background: st.bg, color: st.color, fontSize: '0.62rem', fontWeight: 700, fontFamily: 'var(--font-ui)', padding: '3px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{st.label}</span>
+                        </td>
+                        <td style={{ padding: '11px 20px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#96AFCA', whiteSpace: 'nowrap' }}>
+                          {new Date(s.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minHeight: 0 }}>
+
+          {/* Hiring pipeline */}
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #D0DBE8', padding: '16px 18px', flexShrink: 0 }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#032655', marginBottom: '14px' }}>Hiring Pipeline</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {pipeline.map((p, i) => {
+                const pct = totalCandidates > 0 ? Math.round((p.value / totalCandidates) * 100) : 0
+                return (
+                  <div key={p.label}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#5A7A9F' }}>{p.label}</span>
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: p.color }}>{p.value} {i > 0 && totalCandidates > 0 ? `(${pct}%)` : ''}</span>
+                    </div>
+                    <div style={{ height: '5px', background: '#EEF3F8', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ width: i === 0 ? '100%' : `${pct}%`, height: '100%', background: p.color, borderRadius: '99px', transition: 'width 0.4s ease', opacity: 0.7 }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Hot jobs */}
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #D0DBE8', padding: '16px 18px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#032655', marginBottom: '12px', flexShrink: 0 }}>Active Jobs by Applicants</p>
+            {!hotJobs.length ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#96AFCA' }}>No active jobs</p>
+              </div>
+            ) : (
+              <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {hotJobs.map((j: any, i) => (
+                  <Link key={j.id} href={`/employer/dashboard/jobs/${j.id}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '9px', background: '#F5F8FC', textDecoration: 'none', border: '1px solid #EEF3F8' }}>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 800, color: '#96AFCA', width: '16px', flexShrink: 0 }}>#{i + 1}</span>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</span>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#0A9E97', background: '#D8F0EB', padding: '2px 8px', borderRadius: '10px', flexShrink: 0 }}>{j.count}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

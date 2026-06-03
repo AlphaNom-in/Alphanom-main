@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signUpRecruiter } from '@/lib/auth/recruiter'
+import RoleTabs from '@/components/auth/RoleTabs'
 
 export default function RecruiterSignupPage() {
   const router = useRouter()
@@ -28,7 +29,7 @@ export default function RecruiterSignupPage() {
         password,
         contact_primary: contactPrimary,
       })
-      router.push('/recruiter/dashboard')
+      router.push('/recruiter/dashboard/profile/complete')
     } catch (err: any) {
       console.error(err)
       setError(err.message)
@@ -107,6 +108,8 @@ export default function RecruiterSignupPage() {
             <span style={{ fontFamily:'var(--font-ui)', fontWeight:800, fontSize:'0.95rem', color:'#032655', letterSpacing:'-0.02em' }}>AlphaNom</span>
           </Link>
         </div>
+
+        <RoleTabs active="recruiter" mode="signup" />
 
         <div className="auth-form-wrap">
 
