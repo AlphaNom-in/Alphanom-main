@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -23,9 +23,9 @@ function Tag({ children }: { children: React.ReactNode }) {
 
 export default async function Page({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data: job, error } = await supabase
+  const { data: job, error } = await admin
     .from('job_posts').select('*').eq('id', jobId).single()
 
   if (error || !job) notFound()
@@ -57,7 +57,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <p style={{ fontSize: '18px', fontWeight: 800, color: '#0FB9B1', margin: 0 }}>
-              ₹{job.budget_min?.toLocaleString()} – ₹{job.budget_max?.toLocaleString()}
+              {job.budget_min ? (job.budget_min / 100000).toFixed(0) : '?'} – {job.budget_max ? (job.budget_max / 100000).toFixed(0) : '?'} LPA
             </p>
             <p style={{ fontSize: '11px', color: '#96AFCA', marginTop: '2px' }}>Annual CTC</p>
           </div>

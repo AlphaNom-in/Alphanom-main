@@ -1,5 +1,14 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+
+export const dynamic = 'force-dynamic'
+
+function toLPA(val: number | null) {
+  if (!val) return null
+  const lpa = val / 100000
+  return Number.isInteger(lpa) ? `${lpa}` : lpa.toFixed(1)
+}
 
 export default async function Page() {
   const supabase = await createClient()
@@ -10,7 +19,10 @@ export default async function Page() {
 
   if (!recruiter) return <div>Recruiter profile not found</div>
 
-  const { data: savedJobs } = await supabase
+  // Admin client bypasses RLS so closed/paused jobs the recruiter saved
+  // still appear with their real status instead of silently vanishing.
+  const admin = createAdminClient()
+  const { data: savedJobs } = await admin
     .from('recruiter_saved_jobs')
     .select(`id, saved_at, job_posts(id, title, department, location, work_model, budget_min, budget_max, status)`)
     .eq('recruiter_id', recruiter.id)
@@ -62,7 +74,7 @@ export default async function Page() {
                       {job.work_model && <span>{job.work_model}</span>}
                     </div>
                     <p style={{ fontSize: '13px', fontWeight: 700, color: '#0FB9B1', margin: 0 }}>
-                      ₹{job.budget_min?.toLocaleString()} – ₹{job.budget_max?.toLocaleString()}
+                      {toLPA(job.budget_min)} – {toLPA(job.budget_max)} LPA
                     </p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>

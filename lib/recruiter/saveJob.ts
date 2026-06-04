@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 export async function saveJob(
   jobId: string
@@ -39,6 +40,9 @@ export async function saveJob(
   if (error) {
     throw error
   }
+
+  revalidatePath('/recruiter/dashboard/my-jobs')
+  revalidatePath('/recruiter/dashboard')
 
   return true
 }

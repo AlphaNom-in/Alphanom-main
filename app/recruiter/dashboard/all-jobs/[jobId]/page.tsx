@@ -57,7 +57,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <p style={{ fontSize: '18px', fontWeight: 800, color: '#0FB9B1', margin: 0 }}>
-              ₹{job.budget_min?.toLocaleString()} – ₹{job.budget_max?.toLocaleString()}
+              {job.budget_min ? (job.budget_min / 100000).toFixed(0) : '?'} – {job.budget_max ? (job.budget_max / 100000).toFixed(0) : '?'} LPA
             </p>
             <p style={{ fontSize: '11px', color: '#96AFCA', marginTop: '2px' }}>Annual CTC</p>
           </div>

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
 
 export async function submitCandidate(formData: FormData) {
   const supabase = await createClient()
@@ -46,15 +47,19 @@ export async function submitCandidate(formData: FormData) {
     return v ? Number(v) : null
   }
 
+  const jobPostId = raw('job_post_id')
+  // current_ctc is entered in LPA — store as rupees so employer view (÷100000) is correct
+  const ctcLPA = optionalNum('current_ctc')
+
   const { error } = await supabase.from('candidate_submissions').insert({
-    job_post_id: raw('job_post_id'),
+    job_post_id: jobPostId,
     recruiter_id: recruiter.id,
     candidate_name: raw('candidate_name'),
     contact_primary: raw('contact_primary'),
     contact_secondary: optional('contact_secondary'),
     email: raw('email'),
     linkedin_url: optional('linkedin_url'),
-    current_ctc: optionalNum('current_ctc'),
+    current_ctc: ctcLPA != null ? Math.round(ctcLPA * 100000) : null,
     current_location: optional('current_location'),
     total_experience: optionalNum('total_experience'),
     notice_period: optional('notice_period'),
@@ -64,6 +69,14 @@ export async function submitCandidate(formData: FormData) {
   })
 
   if (error) throw error
+
+  // Invalidate employer-side pages so the new submission appears immediately
+  revalidatePath(`/employer/dashboard/jobs/${jobPostId}/applicants`)
+  revalidatePath(`/employer/dashboard/jobs/${jobPostId}`)
+  revalidatePath('/employer/dashboard/jobs')
+  revalidatePath('/employer/dashboard')
+  // Invalidate recruiter's own submission view
+  revalidatePath('/recruiter/dashboard')
 
   return true
 }

@@ -49,4 +49,6 @@ export async function updateCandidateStatus(
   revalidatePath(`/employer/dashboard/jobs/${jobId}`)
   revalidatePath('/employer/dashboard/jobs')
   revalidatePath('/employer/dashboard')
+  revalidatePath('/recruiter/dashboard/all-jobs')
+  revalidatePath('/recruiter/dashboard/my-jobs')
 }

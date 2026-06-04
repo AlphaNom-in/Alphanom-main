@@ -3,6 +3,8 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import DashboardShell from '@/components/recruiter/DashboardShell'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Layout({
   children,
 }: {

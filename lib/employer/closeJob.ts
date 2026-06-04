@@ -36,4 +36,6 @@ export async function closeJob(jobId: string) {
   revalidatePath('/employer/dashboard/jobs')
   revalidatePath(`/employer/dashboard/jobs/${jobId}`)
   revalidatePath('/employer/dashboard')
+  revalidatePath('/recruiter/dashboard/all-jobs')
+  revalidatePath('/recruiter/dashboard/my-jobs')
 }

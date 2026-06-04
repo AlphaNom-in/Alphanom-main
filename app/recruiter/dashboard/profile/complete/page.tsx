@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { updateProfile } from '@/lib/recruiter/updateProfile'
+import { createClient } from '@/lib/supabase/client'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -28,6 +29,38 @@ export default function CompleteProfilePage() {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [ensuring, setEnsuring] = useState(true)
+
+  // Ensure recruiter row exists before the user submits the form.
+  // Covers users who signed up before the profile-creation fix was applied —
+  // their auth user exists but no `recruiters` row was created.
+  useEffect(() => {
+    async function ensureRow() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setEnsuring(false); return }
+
+      const { data: existing } = await supabase
+        .from('recruiters').select('id').eq('user_id', user.id).single()
+
+      if (!existing) {
+        const raw = localStorage.getItem('__recruiter_signup__')
+        if (raw) {
+          try {
+            const params = JSON.parse(raw) as {
+              full_name: string; email: string; contact_primary: string
+            }
+            await supabase.from('recruiters').insert({ user_id: user.id, ...params })
+            localStorage.removeItem('__recruiter_signup__')
+          } catch {
+            setError('Could not initialise your profile. Please try logging out and signing up again.')
+          }
+        }
+      }
+      setEnsuring(false)
+    }
+    ensureRow()
+  }, [])
 
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
@@ -66,11 +99,24 @@ export default function CompleteProfilePage() {
     startTransition(async () => {
       try {
         await updateProfile(formData)
+        router.refresh()
         router.push('/recruiter/dashboard')
       } catch (err: any) {
         setError(err.message ?? 'Something went wrong')
       }
     })
+  }
+
+  if (ensuring) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F5F8FC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '32px', height: '32px', border: '3px solid #D0DBE8', borderTop: '3px solid #0FB9B1', borderRadius: '50%', margin: '0 auto 12px', animation: 'cpSpin 0.8s linear infinite' }} />
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', color: '#96AFCA' }}>Setting up your profile…</p>
+          <style>{`@keyframes cpSpin { to { transform: rotate(360deg) } }`}</style>
+        </div>
+      </div>
+    )
   }
 
   return (

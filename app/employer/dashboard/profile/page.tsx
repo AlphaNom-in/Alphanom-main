@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getEmployerProfile } from '@/hooks/useEmployer'
+import { ensureEmployerProfile } from '@/hooks/useEmployer'
 import {
   updateEmployerProfile,
   profileCompletionSteps,
@@ -22,7 +22,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getEmployerProfile().then((data) => {
+    ensureEmployerProfile().then((data) => {
       setProfile(data)
       setLoading(false)
     })
@@ -40,7 +40,13 @@ export default function ProfilePage() {
     )
   }
 
-  if (!profile) return null
+  if (!profile) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
+      <p style={{ fontFamily: 'var(--font-ui)', color: '#96AFCA', fontSize: '0.85rem' }}>
+        Profile not found. Please try refreshing the page.
+      </p>
+    </div>
+  )
 
   const steps = profileCompletionSteps(profile)
   const pct = profileCompletionPercent(profile)

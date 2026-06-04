@@ -13,6 +13,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/recruiter/dashboard':                  'Overview',
   '/recruiter/dashboard/all-jobs':         'All Jobs',
   '/recruiter/dashboard/my-jobs':          'Saved Jobs',
+  '/recruiter/dashboard/submissions':      'My Submissions',
   '/recruiter/dashboard/helpdesk':         'Helpdesk',
   '/recruiter/dashboard/profile':          'My Profile',
   '/recruiter/dashboard/profile/complete': 'Complete Profile',
@@ -96,6 +97,10 @@ const NAV = [
   {
     label: 'Saved Jobs', href: '/recruiter/dashboard/my-jobs', exact: false,
     icon: <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" /></svg>,
+  },
+  {
+    label: 'Submissions', href: '/recruiter/dashboard/submissions', exact: false,
+    icon: <svg fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.75 3.75 0 11-6.75 0 3.75 3.75 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>,
   },
   {
     label: 'Helpdesk', href: '/recruiter/dashboard/helpdesk', exact: true,

@@ -21,11 +21,18 @@ export async function createJob(jobData: any) {
     throw new Error('Employer not found')
   }
 
+  // Convert LPA inputs to rupees so display code (÷100000) works correctly
+  const payload = {
+    ...jobData,
+    budget_min: jobData.budget_min ? Math.round(jobData.budget_min * 100000) : null,
+    budget_max: jobData.budget_max ? Math.round(jobData.budget_max * 100000) : null,
+  }
+
   const { error } = await supabase
     .from('job_posts')
     .insert({
       employer_id: employer.id,
-      ...jobData,
+      ...payload,
     })
 
   if (error) {

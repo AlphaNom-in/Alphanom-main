@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import MetricCard from '@/components/recruiter/MetricCard'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   in_pipeline:     { bg: '#EEF3F8', color: '#5A7A9F', label: 'In Pipeline' },
@@ -13,11 +14,12 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
 export default async function Page() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/recruiter/login')
 
   const { data: recruiter } = await supabase
-    .from('recruiters').select('*').eq('user_id', user?.id).single()
+    .from('recruiters').select('*').eq('user_id', user.id).single()
 
-  if (!recruiter) return <div>Recruiter profile not found</div>
+  if (!recruiter) redirect('/recruiter/login')
 
   const [
     { count: savedJobs },
