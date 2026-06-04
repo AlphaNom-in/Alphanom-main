@@ -111,7 +111,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                 {/* Recruiter note */}
                 {a.recruiter_note && (
                   <div style={{ background: '#F5F8FC', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
-                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Recruiter Note</p>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>Job Description</p>
                     <p style={{ fontFamily: 'var(--font-ui)', fontSize: '13px', color: '#5A7A9F', lineHeight: 1.6, margin: 0 }}>{a.recruiter_note}</p>
                   </div>
                 )}

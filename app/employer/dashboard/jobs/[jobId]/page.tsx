@@ -172,7 +172,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
         )}
 
         {job.recruiter_note && (
-          <Section title="Note for Recruiters">
+          <Section title="Job Description">
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7, margin: 0 }}>{job.recruiter_note}</p>
           </Section>
         )}
