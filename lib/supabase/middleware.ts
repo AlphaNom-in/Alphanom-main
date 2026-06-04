@@ -23,11 +23,16 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          // Rebuild from request.headers *after* setting cookies so the
-          // refreshed auth token is forwarded to server components, not the
-          // stale expired one that was snapshotted at the top of the function.
           const refreshedHeaders = new Headers(request.headers)
           refreshedHeaders.set('x-pathname', request.nextUrl.pathname)
+          // request.cookies.set() updates the in-memory cookie store but does
+          // NOT write back to request.headers in Next.js 16.  Explicitly rebuild
+          // the Cookie header from the updated store so server components receive
+          // the refreshed JWT instead of the old expired one.
+          refreshedHeaders.set(
+            'cookie',
+            request.cookies.getAll().map(({ name, value }) => `${name}=${value}`).join('; ')
+          )
           response = NextResponse.next({
             request: { headers: refreshedHeaders },
           })
