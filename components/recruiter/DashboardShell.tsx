@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import LogoutButton from '../employer/LogoutButton'
 
@@ -118,10 +118,20 @@ export default function DashboardShell({
   earnings?: number
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [navOpen, setNavOpen] = useState(false)
 
   // Close nav on route change
   useEffect(() => { setNavOpen(false) }, [pathname])
+
+  // Refresh server data + JWT when user returns to this tab
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') router.refresh()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [router])
 
   // Prevent body scroll when mobile nav open
   useEffect(() => {

@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import LogoutButton from './LogoutButton'
 
 type Props = {
@@ -33,7 +34,16 @@ export default function DashboardShell({
   isProfileComplete,
 }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const pageTitle = PAGE_TITLES[pathname] ?? 'Dashboard'
+
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') router.refresh()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [router])
 
   const NAV = [
     {
