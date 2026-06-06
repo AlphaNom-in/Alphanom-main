@@ -226,7 +226,7 @@ export default async function Page() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead style={{ position: 'sticky', top: 0, background: '#F5F8FC', zIndex: 1 }}>
                   <tr>
-                    {['Candidate', 'Job', 'Status', 'Date'].map((h) => (
+                    {['Candidate', 'Job', 'Status', 'Date', ''].map((h) => (
                       <th key={h} style={{ padding: '9px 20px', textAlign: 'left', fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>
                         {h}
                       </th>
@@ -244,16 +244,16 @@ export default async function Page() {
                       .slice(0, 2)
                       .toUpperCase()
                     return (
-                      <tr key={s.id} style={{ borderTop: i === 0 ? 'none' : '1px solid #EEF3F8' }}>
+                      <tr key={s.id} style={{ borderTop: i === 0 ? 'none' : '1px solid #EEF3F8', cursor: 'pointer' }}>
                         <td style={{ padding: '10px 20px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <Link href={`/employer/dashboard/jobs/${s.job_post_id}/applicants`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
                             <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#EEF3F8', border: '1px solid #D0DBE8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.58rem', fontWeight: 800, color: '#5A7A9F' }}>{initials}</span>
                             </div>
                             <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 600, color: '#032655' }}>
                               {s.candidate_name}
                             </span>
-                          </div>
+                          </Link>
                         </td>
                         <td style={{ padding: '10px 20px', fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#5A7A9F', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
                           {jobTitle}
@@ -265,6 +265,11 @@ export default async function Page() {
                         </td>
                         <td style={{ padding: '10px 20px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#96AFCA', whiteSpace: 'nowrap' as const }}>
                           {new Date(s.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </td>
+                        <td style={{ padding: '10px 16px' }}>
+                          <Link href={`/employer/dashboard/jobs/${s.job_post_id}/applicants`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '26px', height: '26px', borderRadius: '7px', background: '#F5F8FC', border: '1px solid #D0DBE8', color: '#5A7A9F', textDecoration: 'none', fontSize: '0.7rem' }}>
+                            →
+                          </Link>
                         </td>
                       </tr>
                     )
