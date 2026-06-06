@@ -63,25 +63,88 @@ export default function SubmitCandidateForm({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [candidateName, setCandidateName] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     const formData = new FormData(e.currentTarget)
+    const name = formData.get('candidate_name') as string
 
     startTransition(async () => {
       try {
         await submitCandidate(formData)
-        router.push('/recruiter/dashboard/my-jobs')
+        setCandidateName(name)
+        setSubmitted(true)
       } catch (err: any) {
         setError(err.message ?? 'Something went wrong')
       }
     })
   }
 
+  /* ── Success state ────────────────────────────────────────────────── */
+  if (submitted) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+        {/* Checkmark circle */}
+        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #D8F0EB, #B2E8E3)', border: '2px solid rgba(15,185,177,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', boxShadow: '0 8px 24px rgba(15,185,177,0.2)' }}>
+          <svg width="32" height="32" fill="none" stroke="#0A9E97" strokeWidth={2.2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </div>
+
+        <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.25rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.025em', margin: '0 0 0.5rem' }}>
+          Candidate Submitted!
+        </h3>
+        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.875rem', color: '#5A7A9F', lineHeight: 1.7, margin: '0 0 0.25rem' }}>
+          <strong style={{ color: '#032655' }}>{candidateName}</strong> has been submitted for
+        </p>
+        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.875rem', color: '#5A7A9F', lineHeight: 1.7, margin: '0 0 1.75rem' }}>
+          <strong style={{ color: '#0A9E97' }}>{jobTitle}</strong>
+        </p>
+
+        {/* Info strip */}
+        <div style={{ display: 'flex', gap: '1px', background: '#EEF3F8', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.75rem' }}>
+          {[
+            { icon: '📋', label: 'In pipeline', sub: 'Status set to In Pipeline' },
+            { icon: '👀', label: 'Under review', sub: 'Employer will be notified' },
+            { icon: '⚡', label: 'Live now', sub: 'Visible on employer dashboard' },
+          ].map((s, i) => (
+            <div key={i} style={{ flex: 1, background: '#F5F8FC', padding: '12px 8px', textAlign: 'center' }}>
+              <p style={{ fontSize: '1.1rem', margin: '0 0 3px' }}>{s.icon}</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700, color: '#032655', margin: '0 0 2px' }}>{s.label}</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.6rem', color: '#96AFCA', margin: 0 }}>{s.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => { setSubmitted(false); setError(null); formRef.current?.reset() }}
+            style={{ padding: '10px 20px', borderRadius: '10px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#032655', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Submit Another
+          </button>
+          <button
+            onClick={() => router.push('/recruiter/dashboard')}
+            style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#032655', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            View Submissions →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <form ref={formRef} onSubmit={handleSubmit}>
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault() }}
+    >
       <input type="hidden" name="job_post_id" value={jobId} />
 
       <p

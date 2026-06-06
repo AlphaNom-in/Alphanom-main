@@ -41,7 +41,11 @@ export default function PostJobForm() {
 
   return (
     <div style={{ maxWidth: '680px' }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault() }}
+        style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+      >
 
         {/* ── Job Details ──────────────────────────────────────────────────── */}
         <Section

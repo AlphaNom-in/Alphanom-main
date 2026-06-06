@@ -37,14 +37,6 @@ export async function updateCandidateStatus(
 
   if (error) throw error
 
-  // When a candidate is hired, close the job automatically
-  if (status === 'hired') {
-    await admin
-      .from('job_posts')
-      .update({ status: 'closed' })
-      .eq('id', jobId)
-  }
-
   revalidatePath(`/employer/dashboard/jobs/${jobId}/applicants`)
   revalidatePath(`/employer/dashboard/jobs/${jobId}`)
   revalidatePath('/employer/dashboard/jobs')
