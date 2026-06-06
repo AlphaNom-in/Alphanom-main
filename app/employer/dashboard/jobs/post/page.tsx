@@ -96,18 +96,8 @@ export default async function Page() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flexShrink: 0, marginBottom: '1.25rem' }}>
-        <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.25rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.02em', marginBottom: '2px' }}>
-          Post a Job
-        </h1>
-        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#5A7A9F' }}>
-          Fill in the details below to publish a new role to 1,500+ specialist recruiters.
-        </p>
-      </div>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-        <PostJobForm />
-      </div>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <PostJobForm />
     </div>
   )
 }
