@@ -1,9 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { loginRecruiter } from '@/lib/auth/recruiter'
+
+function ResetBanner() {
+  const searchParams = useSearchParams()
+  if (searchParams.get('reset') !== '1') return null
+  return (
+    <div style={{ background:'#D8F0EB', border:'1px solid #0FB9B1', borderRadius:'10px', padding:'0.7rem 0.875rem', marginBottom:'0.75rem', display:'flex', alignItems:'center', gap:'8px' }}>
+      <svg width="15" height="15" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink:0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.78rem', color:'#0A9E97', margin:0, fontWeight:600 }}>Password updated successfully. Sign in with your new password.</p>
+    </div>
+  )
+}
 
 const BENEFITS = [
   'Browse 200+ verified live job mandates',
@@ -13,9 +24,7 @@ const BENEFITS = [
 ]
 
 export default function RecruiterLoginPage() {
-  const router       = useRouter()
-  const searchParams = useSearchParams()
-  const wasReset     = searchParams.get('reset') === '1'
+  const router = useRouter()
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -80,12 +89,7 @@ export default function RecruiterLoginPage() {
               <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.82rem', color:'#5A7A9F', margin:0 }}>Welcome back to your recruiter account</p>
             </div>
 
-            {wasReset && (
-              <div style={{ background:'#D8F0EB', border:'1px solid #0FB9B1', borderRadius:'10px', padding:'0.7rem 0.875rem', marginBottom:'0.75rem', display:'flex', alignItems:'center', gap:'8px' }}>
-                <svg width="15" height="15" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink:0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.78rem', color:'#0A9E97', margin:0, fontWeight:600 }}>Password updated successfully. Sign in with your new password.</p>
-              </div>
-            )}
+            <Suspense fallback={null}><ResetBanner /></Suspense>
 
             {error && <ErrorBox msg={error} />}
 
