@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { sendSignupOtp, verifySignupOtp, checkEmailRegistered } from '@/lib/email/otp'
 
 const FREE_DOMAINS = new Set([
   'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.in', 'yahoo.co.uk',
@@ -31,68 +32,81 @@ export async function signUpEmployer({
   password: string
   contact_primary: string
 }) {
+  // Check if email is already registered before sending OTP
+  const exists = await checkEmailRegistered(email, 'employer')
+  if (exists) throw new Error('An account with this email already exists. Please sign in instead.')
+
+  // Store form data in localStorage — retrieved after OTP verification
+  localStorage.setItem('__employer_signup__', JSON.stringify({
+    company_name, username, email, password, contact_primary,
+  }))
+
+  // Send OTP via Resend
+  await sendSignupOtp(email, company_name, 'employer')
+
+  return 'confirm_email'
+}
+
+export async function verifyEmployerSignupOtp(email: string, otp: string) {
+  // Verify OTP against DB
+  await verifySignupOtp(email, otp, 'employer')
+
+  // OTP valid — now create the Supabase account
+  const raw = localStorage.getItem('__employer_signup__')
+  if (!raw) throw new Error('Signup session expired. Please start over.')
+
+  const { company_name, username, password, contact_primary } = JSON.parse(raw) as {
+    company_name: string
+    username: string
+    email: string
+    password: string
+    contact_primary: string
+  }
+
   const supabase = createClient()
+  let userId: string
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { role: 'employer' } },
   })
-  if (error) throw error
-  if (!data.user) throw new Error('Signup failed')
 
-  const profileData = { company_name, username, email, contact_primary }
-
-  if (data.session) {
-    // Email confirmation is OFF — user is already authenticated, create profile now
-    const { error: profileError } = await supabase.from('employers').insert({
-      user_id: data.user.id,
-      ...profileData,
-    })
-    if (profileError) throw profileError
-    return 'success'
+  if (error) {
+    // Orphaned auth user from a previous abandoned signup — sign in to get the user id
+    if (error.message.toLowerCase().includes('already registered')) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) throw new Error('This email is already in use. Please sign in or use a different email.')
+      userId = signInData.user.id
+    } else {
+      throw error
+    }
+  } else {
+    if (!data.user) throw new Error('Account creation failed.')
+    userId = data.user.id
   }
 
-  // Email confirmation is ON — store data in localStorage for after OTP verification
-  localStorage.setItem('__employer_signup__', JSON.stringify(profileData))
-  return 'confirm_email'
-}
-
-export async function verifyEmployerSignupOtp(email: string, token: string) {
-  const supabase = createClient()
-  const { data, error } = await supabase.auth.verifyOtp({
+  // Create employer profile row
+  const { error: profileError } = await supabase.from('employers').insert({
+    user_id: userId,
+    company_name,
+    username,
     email,
-    token,
-    type: 'signup',
+    contact_primary,
   })
-  if (error) throw error
-  if (!data.user) throw new Error('Verification failed')
+  if (profileError) throw profileError
 
-  // Create employer profile from stored signup data
-  const raw = localStorage.getItem('__employer_signup__')
-  if (raw) {
-    const params = JSON.parse(raw) as {
-      company_name: string
-      username: string
-      email: string
-      contact_primary: string
-    }
-    const { data: existing } = await supabase
-      .from('employers').select('id').eq('user_id', data.user.id).single()
-    if (!existing) {
-      const { error: profileError } = await supabase.from('employers').insert({
-        user_id: data.user.id,
-        ...params,
-      })
-      if (profileError) throw profileError
-    }
-    localStorage.removeItem('__employer_signup__')
-  }
+  localStorage.removeItem('__employer_signup__')
+
+  // Explicitly sign in so session exists regardless of Supabase email confirmation setting
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+  if (signInError) throw signInError
 }
 
 export async function resendEmployerOtp(email: string) {
-  const supabase = createClient()
-  const { error } = await supabase.auth.resend({ type: 'signup', email })
-  if (error) throw error
+  const raw = localStorage.getItem('__employer_signup__')
+  const name = raw ? (JSON.parse(raw) as { company_name: string }).company_name : email
+  await sendSignupOtp(email, name, 'employer')
 }
 
 export async function loginEmployer(email: string, password: string) {

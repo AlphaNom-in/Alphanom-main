@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { createJob } from '../../lib/jobs/createJobs'
+import { createJobAction } from '../../lib/jobs/createJobAction'
 import { DEPARTMENTS } from '../../lib/constants/departments'
+import RichTextEditor from '../ui/RichTextEditor'
 
 export default function PostJobForm() {
   const router = useRouter()
@@ -16,12 +17,15 @@ export default function PostJobForm() {
   const [budgetMax, setBudgetMax] = useState('')
   const [noticePeriod, setNoticePeriod] = useState('')
   const [recruiterNote, setRecruiterNote] = useState('')
+  const [mandatoryCriteria, setMandatoryCriteria] = useState<string[]>([])
+  const [preferredCriteria, setPreferredCriteria] = useState<string[]>([])
+  const [preferredCompanies, setPreferredCompanies] = useState<string[]>([])
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     try {
       setLoading(true)
-      await createJob({
+      await createJobAction({
         title,
         department,
         location,
@@ -30,6 +34,9 @@ export default function PostJobForm() {
         budget_max: Number(budgetMax),
         notice_period: noticePeriod,
         recruiter_note: recruiterNote,
+        mandatory_criteria: mandatoryCriteria,
+        preferred_criteria: preferredCriteria,
+        preferred_companies: preferredCompanies,
       })
       router.push('/employer/dashboard/jobs')
     } catch (error) {
@@ -43,7 +50,7 @@ export default function PostJobForm() {
     <div style={{ maxWidth: '680px' }}>
       <form
         onSubmit={handleSubmit}
-        onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') e.preventDefault() }}
+        onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA' && (e.target as HTMLElement).tagName !== 'DIV') e.preventDefault() }}
         style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
       >
 
@@ -68,11 +75,7 @@ export default function PostJobForm() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <Field label="Department">
-              <select
-                style={input}
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-              >
+              <select style={input} value={department} onChange={(e) => setDepartment(e.target.value)}>
                 <option value="">Select Department</option>
                 {DEPARTMENTS.map((group) => (
                   <optgroup key={group.group} label={group.group}>
@@ -144,21 +147,52 @@ export default function PostJobForm() {
           </Field>
         </Section>
 
-        {/* ── Recruiter Instructions ───────────────────────────────────────── */}
+        {/* ── Requirements ─────────────────────────────────────────────────── */}
+        <Section
+          icon={
+            <svg fill="none" stroke="#5A7A9F" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '14px', height: '14px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          title="Requirements"
+        >
+          <TagInput
+            label="Must-Have Requirements"
+            tags={mandatoryCriteria}
+            onChange={setMandatoryCriteria}
+            placeholder="e.g. 5+ years React — press Enter to add"
+          />
+          <TagInput
+            label="Good to Have"
+            tags={preferredCriteria}
+            onChange={setPreferredCriteria}
+            placeholder="e.g. GraphQL experience — press Enter to add"
+          />
+          <TagInput
+            label="Preferred Company Backgrounds"
+            tags={preferredCompanies}
+            onChange={setPreferredCompanies}
+            placeholder="e.g. Razorpay, Swiggy — press Enter to add"
+          />
+        </Section>
+
+        {/* ── Job Description ───────────────────────────────────────────────── */}
         <Section
           icon={
             <svg fill="none" stroke="#5A7A9F" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '14px', height: '14px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
             </svg>
           }
-          title="Recruiter Instructions"
+          title="Job Description"
         >
-          <textarea
-            style={{ ...input, minHeight: '96px', resize: 'vertical' }}
-            placeholder="Describe what you're looking for — ideal background, must-haves, preferred companies, etc."
-            value={recruiterNote}
-            onChange={(e) => setRecruiterNote(e.target.value)}
-          />
+          <Field label="Description for Recruiters">
+            <RichTextEditor
+              value={recruiterNote}
+              onChange={setRecruiterNote}
+              placeholder="Describe what you're looking for — ideal background, must-haves, preferred companies, etc."
+              minHeight="200px"
+            />
+          </Field>
         </Section>
 
         {/* Submit */}
@@ -199,6 +233,63 @@ export default function PostJobForm() {
 
         <style>{`@keyframes postSpin { to { transform: rotate(360deg) } }`}</style>
       </form>
+    </div>
+  )
+}
+
+/* ── Tag input (controlled) ────────────────────────────────────────────────── */
+function TagInput({
+  label,
+  tags,
+  onChange,
+  placeholder,
+}: {
+  label: string
+  tags: string[]
+  onChange: (tags: string[]) => void
+  placeholder?: string
+}) {
+  const [inputVal, setInputVal] = useState('')
+
+  function add() {
+    const v = inputVal.trim()
+    if (v && !tags.includes(v)) onChange([...tags, v])
+    setInputVal('')
+  }
+
+  function remove(i: number) {
+    onChange(tags.filter((_, idx) => idx !== i))
+  }
+
+  function onKey(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') { e.preventDefault(); add() }
+    if (e.key === 'Backspace' && !inputVal && tags.length) remove(tags.length - 1)
+  }
+
+  return (
+    <div>
+      <label style={{ display: 'block', fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.04em', color: '#5A7A9F', marginBottom: '5px' }}>
+        {label}
+      </label>
+      <div style={{ border: '1.5px solid #D0DBE8', borderRadius: '9px', padding: '8px', background: '#fff', minHeight: '46px', display: 'flex', flexWrap: 'wrap' as const, gap: '6px', alignItems: 'center' }}>
+        {tags.map((t, i) => (
+          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, color: '#032655', background: '#EEF3F8', border: '1px solid #D0DBE8', borderRadius: '6px', padding: '3px 8px' }}>
+            {t}
+            <button type="button" onClick={() => remove(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#96AFCA', fontSize: '14px', lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center' }}>×</button>
+          </span>
+        ))}
+        <input
+          value={inputVal}
+          onChange={e => setInputVal(e.target.value)}
+          onKeyDown={onKey}
+          onBlur={add}
+          placeholder={tags.length === 0 ? (placeholder ?? 'Type and press Enter…') : ''}
+          style={{ border: 'none', outline: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#032655', flex: '1', minWidth: '140px', background: 'transparent', padding: '2px 4px' }}
+        />
+      </div>
+      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', color: '#96AFCA', marginTop: '4px' }}>
+        Press Enter or click away to add · Backspace to remove last
+      </p>
     </div>
   )
 }

@@ -51,8 +51,33 @@ function avatarColor(name: string | null) {
   return AVATARS[name.charCodeAt(0) % AVATARS.length]
 }
 
-/* Render recruiter_note text with bullet detection */
+function isHTML(text: string): boolean {
+  return /<\/?(b|i|u|br|ul|ol|li|p|strong|em)\b[^>]*>/i.test(text)
+}
+
+/* Render recruiter_note — HTML (rich text editor) or plain text (legacy) */
 function JobDescription({ text }: { text: string }) {
+  if (isHTML(text)) {
+    return (
+      <>
+        <div
+          dangerouslySetInnerHTML={{ __html: text }}
+          className="jd-html-rv"
+          style={{ fontFamily: 'var(--font-ui)', fontSize: '0.875rem', color: '#3D5A7A', lineHeight: 1.75 }}
+        />
+        <style>{`
+          .jd-html-rv b, .jd-html-rv strong { font-weight: 700; color: #032655; }
+          .jd-html-rv i, .jd-html-rv em { font-style: italic; }
+          .jd-html-rv u { text-decoration: underline; }
+          .jd-html-rv ul, .jd-html-rv ol { margin: 6px 0; padding-left: 20px; }
+          .jd-html-rv li { margin: 3px 0; }
+          .jd-html-rv p { margin: 4px 0; }
+        `}</style>
+      </>
+    )
+  }
+
+  /* Legacy plain-text with bullet detection */
   const lines = text.split(/\n+/).map((l: string) => l.trim()).filter(Boolean)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>

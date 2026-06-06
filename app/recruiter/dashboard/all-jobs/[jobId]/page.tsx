@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
+function isHTML(text: string): boolean {
+  return /<\/?(b|i|u|br|ul|ol|li|strong|em)\b[^>]*>/i.test(text)
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #D0DBE8', padding: '18px 20px' }}>
@@ -100,7 +104,25 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
         {job.recruiter_note && (
           <Section title="Job Description">
-            <p style={{ fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7, margin: 0 }}>{job.recruiter_note}</p>
+            {isHTML(job.recruiter_note) ? (
+              <>
+                <div
+                  dangerouslySetInnerHTML={{ __html: job.recruiter_note }}
+                  className="jd-html"
+                  style={{ fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7 }}
+                />
+                <style>{`
+                  .jd-html b, .jd-html strong { font-weight: 700; color: #032655; }
+                  .jd-html i, .jd-html em { font-style: italic; }
+                  .jd-html u { text-decoration: underline; }
+                  .jd-html ul, .jd-html ol { margin: 6px 0; padding-left: 20px; }
+                  .jd-html li { margin: 3px 0; }
+                  .jd-html p { margin: 4px 0; }
+                `}</style>
+              </>
+            ) : (
+              <p style={{ fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{job.recruiter_note}</p>
+            )}
           </Section>
         )}
 

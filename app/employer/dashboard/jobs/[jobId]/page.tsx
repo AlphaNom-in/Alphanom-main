@@ -16,8 +16,34 @@ function formatBudget(val: number | null): string | null {
   return `₹${val}L` // old format stored in LPA directly
 }
 
-/* Render recruiter_note respecting newlines + bullet patterns */
+/* Detect HTML content written by the rich-text editor */
+function isHTML(text: string): boolean {
+  return /<\/?(b|i|u|br|ul|ol|li|strong|em)\b[^>]*>/i.test(text)
+}
+
+/* Render recruiter_note — HTML (rich text editor) or plain text (legacy) */
 function JobDescription({ text }: { text: string }) {
+  if (isHTML(text)) {
+    return (
+      <>
+        <div
+          dangerouslySetInnerHTML={{ __html: text }}
+          className="jd-html"
+          style={{ fontFamily: 'var(--font-ui)', fontSize: '0.875rem', color: '#3D5A7A', lineHeight: 1.75 }}
+        />
+        <style>{`
+          .jd-html b, .jd-html strong { font-weight: 700; }
+          .jd-html i, .jd-html em { font-style: italic; }
+          .jd-html u { text-decoration: underline; }
+          .jd-html ul, .jd-html ol { margin: 6px 0; padding-left: 20px; }
+          .jd-html li { margin: 3px 0; }
+          .jd-html p { margin: 4px 0; }
+        `}</style>
+      </>
+    )
+  }
+
+  /* Legacy plain-text rendering with bullet detection */
   const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
