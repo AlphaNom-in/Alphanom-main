@@ -272,10 +272,10 @@ function EcosystemDiagram() {
         <StatChip value="48h" label="Avg. Response" color="#0FB9B1" />
       </div>
       <div style={{ position: 'absolute', top: '38%', right: '-2%', zIndex: 8 }}>
-        <StatChip value="95%" label="Success Rate" color="#032655" />
+        <StatChip value="88%" label="Placement Rate" color="#032655" />
       </div>
       <div style={{ position: 'absolute', bottom: '28%', left: '50%', transform: 'translateX(-50%)', zIndex: 8 }}>
-        <StatChip value="8k+" label="Roles Closed" color="#5A7A9F" />
+        <StatChip value="85+" label="Roles Filled" color="#5A7A9F" />
       </div>
 
       {/* Connector lines SVG */}

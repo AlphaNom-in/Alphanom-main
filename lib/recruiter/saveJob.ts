@@ -29,17 +29,14 @@ export async function saveJob(
     )
   }
 
-  const { error } =
-    await supabase
-      .from('recruiter_saved_jobs')
-      .insert({
-        recruiter_id: recruiter.id,
-        job_post_id: jobId,
-      })
+  const { error } = await supabase
+    .from('recruiter_saved_jobs')
+    .upsert(
+      { recruiter_id: recruiter.id, job_post_id: jobId },
+      { onConflict: 'recruiter_id,job_post_id', ignoreDuplicates: true }
+    )
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
   revalidatePath('/recruiter/dashboard/my-jobs')
   revalidatePath('/recruiter/dashboard')

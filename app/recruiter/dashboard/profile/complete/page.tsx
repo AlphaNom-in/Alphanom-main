@@ -88,17 +88,34 @@ export default function CompleteProfilePage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    const li      = (fd.get('linkedin_url')     as string ?? '').trim()
+    const contact = (fd.get('contact_secondary') as string ?? '').replace(/\s/g, '')
+    const cvFile  = fd.get('cv') as File
+
     if (tags.length === 0) {
       setError('Please add at least one specialization.')
       return
     }
+    if (!li) {
+      setError('LinkedIn profile URL is required.')
+      return
+    }
+    if (contact && !/^\d{10}$/.test(contact)) {
+      setError('Contact number must be exactly 10 digits.')
+      return
+    }
+    if (!cvFile || cvFile.size === 0) {
+      setError('Please upload your CV / resume — it is required.')
+      return
+    }
+
     setError(null)
-    const formData = new FormData(e.currentTarget)
-    formData.set('specialization', tags.join(','))
+    fd.set('specialization', tags.join(','))
 
     startTransition(async () => {
       try {
-        await updateProfile(formData)
+        await updateProfile(fd)
         router.refresh()
         router.push('/recruiter/dashboard')
       } catch (err: any) {
@@ -260,6 +277,30 @@ export default function CompleteProfilePage() {
               </p>
             </div>
 
+            {/* LinkedIn */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>
+                LinkedIn Profile URL <span style={{ color: '#E53E3E' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#96AFCA', pointerEvents: 'none' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </span>
+                <input
+                  name="linkedin_url"
+                  type="url"
+                  required
+                  placeholder="https://linkedin.com/in/yourname"
+                  style={{ ...inputStyle, paddingLeft: '34px' }}
+                />
+              </div>
+              <p style={{ color: '#96AFCA', fontSize: '12px', marginTop: '4px' }}>
+                Required — helps employers verify your credibility
+              </p>
+            </div>
+
             {/* Years of experience */}
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>
@@ -282,26 +323,31 @@ export default function CompleteProfilePage() {
               <input
                 name="contact_secondary"
                 type="tel"
-                placeholder="+91 98765 43210"
+                inputMode="numeric"
+                maxLength={10}
+                pattern="\d{10}"
+                placeholder="10-digit number"
                 style={inputStyle}
               />
+              <p style={{ color: '#96AFCA', fontSize: '12px', marginTop: '4px' }}>
+                Digits only, exactly 10 numbers
+              </p>
             </div>
 
-            {/* CV upload */}
+            {/* CV upload — required */}
             <div style={{ marginBottom: '28px' }}>
-              <label style={labelStyle}>Your CV</label>
+              <label style={labelStyle}>
+                Your CV / Resume <span style={{ color: '#E53E3E' }}>*</span>
+              </label>
               <input
                 name="cv"
                 type="file"
                 accept=".pdf,.doc,.docx"
-                style={{
-                  ...inputStyle,
-                  padding: '8px 14px',
-                  cursor: 'pointer',
-                }}
+                required
+                style={{ ...inputStyle, padding: '8px 14px', cursor: 'pointer' }}
               />
               <p style={{ color: '#96AFCA', fontSize: '12px', marginTop: '4px' }}>
-                PDF, DOC or DOCX — helps employers understand your background
+                PDF, DOC or DOCX — required before you can submit candidates
               </p>
             </div>
 

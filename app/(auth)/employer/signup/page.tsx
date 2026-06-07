@@ -27,6 +27,7 @@ export default function EmployerSignupPage() {
   const [loading,        setLoading]        = useState(false)
   const [error,          setError]          = useState('')
   const [emailError,     setEmailError]     = useState('')
+  const [agreedToTerms,  setAgreedToTerms]  = useState(false)
 
   function handleEmailBlur() {
     if (!email) { setEmailError(''); return }
@@ -38,6 +39,14 @@ export default function EmployerSignupPage() {
     e.preventDefault()
     const emailErr = validateCompanyEmail(email)
     if (emailErr) { setEmailError(emailErr); return }
+    if (!/^\d{10}$/.test(contactPrimary)) {
+      setError('Contact number must be exactly 10 digits.')
+      return
+    }
+    if (!agreedToTerms) {
+      setError('Please read and agree to the Terms & Conditions to continue.')
+      return
+    }
     setError(''); setLoading(true)
     try {
       const result = await signUpEmployer({ company_name: companyName, username, email, password, contact_primary: contactPrimary })
@@ -148,8 +157,25 @@ export default function EmployerSignupPage() {
                     </div>
                   </Field>
                   <Field label="Primary Contact Number">
-                    <input className="auth-input" type="text" value={contactPrimary} onChange={e => setContactPrimary(e.target.value)} placeholder="+91 98765 43210" required/>
+                    <input className="auth-input" type="tel" inputMode="numeric" maxLength={10} value={contactPrimary} onChange={e => setContactPrimary(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" required/>
                   </Field>
+
+                  {/* Terms agreement */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 14px', background: agreedToTerms ? '#F0FBF9' : '#F8FAFC', border: `1px solid ${agreedToTerms ? 'rgba(15,185,177,0.3)' : '#E2EAF3'}`, borderRadius: '9px', transition: 'all 0.2s' }}>
+                    <input
+                      type="checkbox"
+                      id="emp-terms"
+                      checked={agreedToTerms}
+                      onChange={e => setAgreedToTerms(e.target.checked)}
+                      style={{ marginTop: '2px', accentColor: '#032655', width: '15px', height: '15px', flexShrink: 0, cursor: 'pointer' }}
+                    />
+                    <label htmlFor="emp-terms" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.76rem', color: '#5A7A9F', lineHeight: 1.55, cursor: 'pointer' }}>
+                      I have read and agree to the{' '}
+                      <a href="/terms/employer" target="_blank" rel="noopener noreferrer" style={{ color: '#032655', fontWeight: 700, textDecoration: 'underline' }}>
+                        AlphaNom Employer Terms & Conditions
+                      </a>
+                    </label>
+                  </div>
 
                   <SubmitBtn loading={loading} label="Create Account" bg="#032655" />
 

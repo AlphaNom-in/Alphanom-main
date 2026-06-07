@@ -79,7 +79,31 @@ function ReadMore({ children, maxHeight = 140 }: { children: React.ReactNode; ma
   )
 }
 
+function isHTML(text: string): boolean {
+  return /<\/?(b|i|u|br|ul|ol|li|p|strong|em)\b[^>]*>/i.test(text)
+}
+
 function JobDescription({ text }: { text: string }) {
+  if (isHTML(text)) {
+    return (
+      <>
+        <div
+          dangerouslySetInnerHTML={{ __html: text }}
+          className="jd-html-ms"
+          style={{ fontFamily: 'var(--font-ui)', fontSize: '0.875rem', color: '#3D5A7A', lineHeight: 1.75 }}
+        />
+        <style>{`
+          .jd-html-ms b, .jd-html-ms strong { font-weight: 700; color: #032655; }
+          .jd-html-ms i, .jd-html-ms em { font-style: italic; }
+          .jd-html-ms u { text-decoration: underline; }
+          .jd-html-ms ul, .jd-html-ms ol { margin: 6px 0; padding-left: 20px; }
+          .jd-html-ms li { margin: 3px 0; }
+          .jd-html-ms p { margin: 4px 0; }
+        `}</style>
+      </>
+    )
+  }
+
   const lines = text.split(/\n+/).map((l: string) => l.trim()).filter(Boolean)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
@@ -132,6 +156,8 @@ export default function MySavedJobsView({ savedJobs, submissionCounts }: { saved
   const selBudgetMin = formatBudget(selected?.budget_min)
   const selBudgetMax = formatBudget(selected?.budget_max)
   const hasBudget    = selBudgetMin || selBudgetMax
+  const avgCTC       = ((selected?.budget_min ?? 0) + (selected?.budget_max ?? 0)) / 2
+  const earningFee   = avgCTC > 0 ? formatBudget(Math.round(avgCTC * 0.04)) : null
   const avatarBg     = avatarColor(employer?.company_name ?? null)
   const city         = companyCity(employer?.company_address ?? null)
   const isActive     = selected?.status === 'active'
@@ -325,9 +351,9 @@ export default function MySavedJobsView({ savedJobs, submissionCounts }: { saved
                       {selected.department}
                     </span>
                   )}
-                  {hasBudget && (
+                  {earningFee && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#0A9E97', background: '#D8F0EB', border: '1px solid rgba(15,185,177,0.25)', borderRadius: '100px', padding: '4px 11px' }}>
-                      💰 {selBudgetMin} – {selBudgetMax} PA
+                      Earning Potential: {earningFee}
                     </span>
                   )}
                   {selected.notice_period && (

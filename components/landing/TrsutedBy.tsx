@@ -3,37 +3,37 @@
 import { useEffect, useRef, useState } from 'react'
 
 const COMPANIES = [
-  { name: 'Razorpay',  initial: 'R', color: '#3395FF', sector: 'Fintech'    },
-  { name: 'PhonePe',   initial: 'P', color: '#5F259F', sector: 'Payments'   },
-  { name: 'Swiggy',    initial: 'S', color: '#FC8019', sector: 'FoodTech'   },
-  { name: 'Zepto',     initial: 'Z', color: '#9B51E0', sector: 'Q-commerce' },
-  { name: 'Paytm',     initial: 'P', color: '#00BAF2', sector: 'Fintech'    },
-  { name: 'Meesho',    initial: 'M', color: '#570DF8', sector: 'E-commerce' },
-  { name: 'CRED',      initial: 'C', color: '#1C1C1C', sector: 'Fintech'    },
-  { name: 'Groww',     initial: 'G', color: '#00D09C', sector: 'Wealthtech' },
-  { name: 'Slice',     initial: 'S', color: '#FF4F5E', sector: 'BNPL'       },
-  { name: 'Ola',       initial: 'O', color: '#EF4444', sector: 'Mobility'   },
-  { name: 'Nykaa',     initial: 'N', color: '#FC2779', sector: 'Beauty'     },
-  { name: 'Zerodha',   initial: 'Z', color: '#387ED1', sector: 'Fintech'    },
+  { name: 'OneCard',     initial: 'OC', color: '#5C35C9', sector: 'Fintech'    },
+  { name: 'Jupiter',     initial: 'J',  color: '#1E40AF', sector: 'Neo-bank'   },
+  { name: 'Perfios',     initial: 'P',  color: '#0055B3', sector: 'Fintech'    },
+  { name: 'Locus',       initial: 'L',  color: '#F97316', sector: 'Logistics'  },
+  { name: 'Classplus',   initial: 'C',  color: '#7C3AED', sector: 'EdTech'     },
+  { name: 'Darwinbox',   initial: 'D',  color: '#0E7490', sector: 'HR Tech'    },
+  { name: 'MoEngage',    initial: 'M',  color: '#2563EB', sector: 'SaaS'       },
+  { name: 'Keka',        initial: 'K',  color: '#E84040', sector: 'HR Tech'    },
+  { name: 'Porter',      initial: 'P',  color: '#1B6BF6', sector: 'Logistics'  },
+  { name: 'LeadSquared', initial: 'LS', color: '#D97706', sector: 'SaaS CRM'  },
+  { name: 'Whatfix',     initial: 'W',  color: '#0F766E', sector: 'SaaS'       },
+  { name: 'Hyperface',   initial: 'H',  color: '#7E22CE', sector: 'Embedded Fi'},
 ]
 
 const STATS = [
-  { value: '200+',  label: 'Companies Hiring',  icon: (
+  { value: '22+',  label: 'Companies Onboarded', icon: (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18h16.5a1.5 1.5 0 011.5 1.5v11.25a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V4.5a1.5 1.5 0 011.5-1.5z"/>
     </svg>
   )},
-  { value: '1,500+', label: 'Active Recruiters', icon: (
+  { value: '140+', label: 'Active Recruiters',   icon: (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
     </svg>
   )},
-  { value: '8,000+', label: 'Roles Closed',      icon: (
+  { value: '85+',  label: 'Roles Filled',        icon: (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
   )},
-  { value: '95%',   label: 'Success Rate',       icon: (
+  { value: '48h',  label: 'Avg. First Match',    icon: (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
     </svg>
@@ -102,15 +102,15 @@ export default function TrustedBy() {
             fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.03em',
             lineHeight: 1.1, margin: '0 0 1rem',
           }}>
-            Powering India's<br/>
-            <span style={{ color: '#0FB9B1' }}>Fastest-Growing</span> Teams
+            Hiring Partners That<br/>
+            <span style={{ color: '#0FB9B1' }}>Move Fast</span>
           </h2>
           <p style={{
             fontFamily: 'var(--font-ui)', fontSize: '0.9375rem', color: 'rgba(255,255,255,0.6)',
             lineHeight: 1.7, maxWidth: '500px', margin: '0 auto',
           }}>
-            From seed-stage startups to public-market leaders — the companies
-            that move fast trust AlphaNom to find the talent that keeps them there.
+            From seed-stage startups to Series B companies — growing teams across
+            India use AlphaNom to find the right talent quickly.
           </p>
         </div>
 
@@ -198,7 +198,7 @@ export default function TrustedBy() {
           {[
             { icon: '🔒', text: 'Verified employers only' },
             { icon: '⚡', text: 'First candidate in 48hrs' },
-            { icon: '✓',  text: '95% placement success rate' },
+            { icon: '✓',  text: '85+ placements and counting' },
           ].map((b, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: '8px',

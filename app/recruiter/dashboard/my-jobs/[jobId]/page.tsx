@@ -72,7 +72,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
           {[
             { label: 'Work Model',    value: job.work_model     || '—' },
             { label: 'Notice Period', value: job.notice_period  || '—' },
-            { label: 'Budget',        value: job.budget_max ? `₹${Math.round(job.budget_max / 12 / 1000)}K/mo` : '—' },
+            { label: 'Earning Potential', value: (job.budget_min || job.budget_max) ? `₹${((((job.budget_min ?? 0) + (job.budget_max ?? 0)) / 2) * 0.04 / 100000).toFixed(1)}L` : '—' },
           ].map((s) => (
             <div key={s.label} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #D0DBE8', padding: '12px 16px' }}>
               <p style={{ fontSize: '10px', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>{s.label}</p>

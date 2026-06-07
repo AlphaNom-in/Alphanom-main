@@ -22,10 +22,8 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
   const [submitted, setSubmitted] = useState(false)
 
   // Step 1 — Candidate Info
-  const [candidateName,    setCandidateName]    = useState('')
-  const [email,            setEmail]            = useState('')
-  const [contactPrimary,   setContactPrimary]   = useState('')
-  const [contactSecondary, setContactSecondary] = useState('')
+  const [candidateName, setCandidateName] = useState('')
+  const [email,         setEmail]         = useState('')
 
   // Step 2 — Professional Details
   const [currentCtc,      setCurrentCtc]      = useState('')
@@ -34,8 +32,7 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
   const [noticePeriod,    setNoticePeriod]    = useState('')
 
   // Step 3 — Online Presence
-  const [linkedinUrl,   setLinkedinUrl]   = useState('')
-  const [portfolioUrl,  setPortfolioUrl]  = useState('')
+  const [portfolioUrl, setPortfolioUrl] = useState('')
 
   // Step 4 — Resume & Note
   const [resume,        setResume]        = useState<File | null>(null)
@@ -44,9 +41,8 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
   function validateStep(): boolean {
     setStepError('')
     if (step === 0) {
-      if (!candidateName.trim())  { setStepError('Full name is required.'); return false }
-      if (!email.trim())          { setStepError('Email address is required.'); return false }
-      if (!contactPrimary.trim()) { setStepError('Primary contact number is required.'); return false }
+      if (!candidateName.trim()) { setStepError('Full name is required.'); return false }
+      if (!email.trim())         { setStepError('Email address is required.'); return false }
     }
     if (step === 3) {
       if (!resume)                { setStepError('Please upload the candidate\'s resume.'); return false }
@@ -73,17 +69,14 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
     try {
       setLoading(true)
       const fd = new FormData()
-      fd.append('job_post_id',  jobId)
+      fd.append('job_post_id',    jobId)
       fd.append('candidate_name', candidateName)
       fd.append('email',          email)
-      fd.append('contact_primary', contactPrimary)
-      if (contactSecondary) fd.append('contact_secondary', contactSecondary)
-      if (currentCtc)       fd.append('current_ctc',       currentCtc)
-      if (totalExperience)  fd.append('total_experience',  totalExperience)
-      if (currentLocation)  fd.append('current_location',  currentLocation)
-      if (noticePeriod)     fd.append('notice_period',     noticePeriod)
-      if (linkedinUrl)      fd.append('linkedin_url',      linkedinUrl)
-      if (portfolioUrl)     fd.append('portfolio_url',     portfolioUrl)
+      if (currentCtc)      fd.append('current_ctc',      currentCtc)
+      if (totalExperience) fd.append('total_experience', totalExperience)
+      if (currentLocation) fd.append('current_location', currentLocation)
+      if (noticePeriod)    fd.append('notice_period',    noticePeriod)
+      if (portfolioUrl)    fd.append('portfolio_url',    portfolioUrl)
       fd.append('resume',         resume)
       fd.append('recruiter_note', recruiterNote)
       await submitCandidate(fd)
@@ -97,9 +90,9 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
 
   function resetForm() {
     setStep(0); setStepError(''); setSubmitted(false)
-    setCandidateName(''); setEmail(''); setContactPrimary(''); setContactSecondary('')
+    setCandidateName(''); setEmail('')
     setCurrentCtc(''); setTotalExperience(''); setCurrentLocation(''); setNoticePeriod('')
-    setLinkedinUrl(''); setPortfolioUrl(''); setResume(null); setRecruiterNote('')
+    setPortfolioUrl(''); setResume(null); setRecruiterNote('')
   }
 
   const progress = ((step + 1) / STEPS.length) * 100
@@ -245,14 +238,6 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
               <Field label="Email *">
                 <input style={inp} type="email" placeholder="candidate@email.com" value={email} onChange={e => setEmail(e.target.value)} />
               </Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <Field label="Primary Contact *">
-                  <input style={inp} type="tel" placeholder="+91 98765 43210" value={contactPrimary} onChange={e => setContactPrimary(e.target.value)} />
-                </Field>
-                <Field label="Secondary Contact">
-                  <input style={inp} type="tel" placeholder="+91 98765 43210" value={contactSecondary} onChange={e => setContactSecondary(e.target.value)} />
-                </Field>
-              </div>
             </div>
           )}
 
@@ -289,15 +274,12 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
           {/* ── STEP 3: Online Presence ─────────────────────────────────── */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <Field label="LinkedIn URL">
-                <input style={inp} type="url" placeholder="https://linkedin.com/in/…" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} autoFocus />
-              </Field>
               <Field label="Portfolio / GitHub URL">
-                <input style={inp} type="url" placeholder="https://…" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} />
+                <input style={inp} type="url" placeholder="https://…" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} autoFocus />
               </Field>
               <div style={{ background: '#F8FAFC', border: '1px solid #E8EEF4', borderRadius: '10px', padding: '12px 16px' }}>
                 <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#5A7A9F', margin: 0, lineHeight: 1.6 }}>
-                  Both fields are optional. A LinkedIn profile helps employers quickly verify the candidate's background.
+                  This field is optional. A portfolio or GitHub link helps employers evaluate the candidate's work.
                 </p>
               </div>
             </div>
@@ -358,10 +340,6 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
               <ReviewSection label="Candidate Info" onEdit={() => { setStep(0); setStepError('') }}>
                 <p style={rv.title}>{candidateName}</p>
                 <p style={rv.secondary}>{email}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px', marginTop: '8px' }}>
-                  <Chip>{contactPrimary}</Chip>
-                  {contactSecondary && <Chip>{contactSecondary}</Chip>}
-                </div>
               </ReviewSection>
 
               <ReviewSection label="Professional Details" onEdit={() => { setStep(1); setStepError('') }}>
@@ -379,9 +357,10 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
               </ReviewSection>
 
               <ReviewSection label="Online Presence" onEdit={() => { setStep(2); setStepError('') }}>
-                {linkedinUrl  && <p style={{ ...rv.value, wordBreak: 'break-all' as const }}>{linkedinUrl}</p>}
-                {portfolioUrl && <p style={{ ...rv.secondary, wordBreak: 'break-all' as const, marginTop: linkedinUrl ? '4px' : 0 }}>{portfolioUrl}</p>}
-                {!linkedinUrl && !portfolioUrl && <p style={rv.empty}>No links added</p>}
+                {portfolioUrl
+                  ? <p style={{ ...rv.secondary, wordBreak: 'break-all' as const }}>{portfolioUrl}</p>
+                  : <p style={rv.empty}>No links added</p>
+                }
               </ReviewSection>
 
               <ReviewSection label="Resume & Note" onEdit={() => { setStep(3); setStepError('') }}>

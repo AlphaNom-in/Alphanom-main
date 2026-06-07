@@ -31,6 +31,14 @@ export default async function Page() {
           <InfoRow label="Email"          value={recruiter.email} />
           <InfoRow label="Primary Contact" value={recruiter.contact_primary} />
           <InfoRow label="Member Since"   value={new Date(recruiter.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} />
+          {recruiter.linkedin_url && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <p style={{ fontSize: '10px', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px' }}>LinkedIn</p>
+              <a href={recruiter.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', fontWeight: 600, color: '#0FB9B1', textDecoration: 'none', wordBreak: 'break-all' }}>
+                {recruiter.linkedin_url}
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Editable form */}

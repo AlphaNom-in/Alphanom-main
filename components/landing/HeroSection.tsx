@@ -23,17 +23,17 @@ function useCountUp(target: number, duration = 2000, started = false) {
 }
 
 const STATS = [
-  { num: 200,  suffix: '+', label: 'Companies Hiring'  },
-  { num: 1500, suffix: '+', label: 'Active Recruiters' },
-  { num: 8000, suffix: '+', label: 'Roles Closed'      },
-  { num: 95,   suffix: '%', label: 'Success Rate'      },
+  { num: 22,  suffix: '+', label: 'Companies Onboarded' },
+  { num: 140, suffix: '+', label: 'Active Recruiters'   },
+  { num: 85,  suffix: '+', label: 'Roles Filled'        },
+  { num: 48,  suffix: 'h', label: 'Avg. First Match'    },
 ]
 
 const CANDIDATE_ROWS = [
-  { name: 'Ananya Sharma', meta: '6 yrs · Razorpay', status: 'Shortlisted', statusColor: '#0A9E97', statusBg: '#D8F0EB', dot: '#0FB9B1' },
-  { name: 'Rohan Mehta',   meta: '4 yrs · PhonePe',  status: 'In Review',   statusColor: '#7A5C00', statusBg: '#FDF3DC', dot: '#F5A623' },
-  { name: 'Priya Nair',    meta: '8 yrs · Swiggy',   status: 'Shortlisted', statusColor: '#0A9E97', statusBg: '#D8F0EB', dot: '#0FB9B1' },
-  { name: 'Karan Gupta',   meta: '5 yrs · Zepto',    status: 'In Pipeline', statusColor: '#1C2E4A', statusBg: '#EEF3F8', dot: '#96AFCA' },
+  { name: 'Ananya Sharma', meta: '6 yrs · Perfios',   status: 'Shortlisted', statusColor: '#0A9E97', statusBg: '#D8F0EB', dot: '#0FB9B1' },
+  { name: 'Rohan Mehta',   meta: '4 yrs · OneCard',   status: 'In Review',   statusColor: '#7A5C00', statusBg: '#FDF3DC', dot: '#F5A623' },
+  { name: 'Priya Nair',    meta: '7 yrs · MoEngage',  status: 'Shortlisted', statusColor: '#0A9E97', statusBg: '#D8F0EB', dot: '#0FB9B1' },
+  { name: 'Karan Gupta',   meta: '5 yrs · Locus',     status: 'In Pipeline', statusColor: '#1C2E4A', statusBg: '#EEF3F8', dot: '#96AFCA' },
 ]
 
 export default function HeroSection() {
@@ -55,10 +55,10 @@ export default function HeroSection() {
     return () => observer.disconnect()
   }, [])
 
-  const c0 = useCountUp(200,  1800, statsOn)
-  const c1 = useCountUp(1500, 2000, statsOn)
-  const c2 = useCountUp(8000, 2200, statsOn)
-  const c3 = useCountUp(95,   1600, statsOn)
+  const c0 = useCountUp(22,  800,  statsOn)
+  const c1 = useCountUp(140, 1400, statsOn)
+  const c2 = useCountUp(85,  1000, statsOn)
+  const c3 = useCountUp(48,  600,  statsOn)
   const counts = [c0, c1, c2, c3]
 
   const anim = (delay = 0): React.CSSProperties => ({
@@ -235,7 +235,7 @@ export default function HeroSection() {
                   ))}
                 </div>
                 <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 500, color: '#5A7A9F' }}>
-                  Trusted by <strong style={{ color: '#032655', fontWeight: 700 }}>1,500+</strong> recruiters across India
+                  Trusted by <strong style={{ color: '#032655', fontWeight: 700 }}>140+</strong> verified recruiters across India
                 </p>
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function HeroSection() {
                   New Job Posted
                 </p>
                 <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.58rem', color: '#96AFCA' }}>
-                  CTO · Series B · Bangalore
+                  Product Manager · Series A · Mumbai
                 </p>
               </div>
             </div>

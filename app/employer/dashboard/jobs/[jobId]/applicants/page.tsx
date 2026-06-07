@@ -41,7 +41,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
   const { data: applicants } = await supabase
     .from('candidate_submissions')
-    .select('id, candidate_name, email, contact_primary, contact_secondary, linkedin_url, current_ctc, current_location, total_experience, notice_period, resume_url, recruiter_note, status, submitted_at')
+    .select('id, candidate_name, email, current_ctc, current_location, total_experience, notice_period, resume_url, recruiter_note, status, submitted_at')
     .eq('job_post_id', jobId)
     .order('submitted_at', { ascending: false })
 
@@ -160,18 +160,6 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                           {a.email}
                         </a>
                       )}
-                      {a.contact_primary && (
-                        <a href={`tel:${a.contact_primary}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#5A7A9F', textDecoration: 'none' }}>
-                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                          {a.contact_primary}
-                        </a>
-                      )}
-                      {a.linkedin_url && (
-                        <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#0284C7', textDecoration: 'none', fontWeight: 600 }}>
-                          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                          LinkedIn ↗
-                        </a>
-                      )}
                     </div>
                   </div>
 
@@ -258,14 +246,6 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                     <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#96AFCA', fontWeight: 500 }}>
                       Submitted {new Date(a.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
-                    {a.contact_secondary && (
-                      <>
-                        <span style={{ color: '#D0DBE8' }}>·</span>
-                        <a href={`tel:${a.contact_secondary}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#5A7A9F', textDecoration: 'none' }}>
-                          Alt: {a.contact_secondary}
-                        </a>
-                      </>
-                    )}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

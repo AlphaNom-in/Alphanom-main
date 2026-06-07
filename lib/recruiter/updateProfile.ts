@@ -54,6 +54,7 @@ export async function updateProfile(formData: FormData) {
   const yearsRaw = formData.get('years_of_experience') as string
   const fullName = formData.get('full_name') as string
   const contactPrimary = formData.get('contact_primary') as string
+  const linkedinUrl = formData.get('linkedin_url') as string
 
   if (fullName) updates.full_name = fullName
   if (contactPrimary) updates.contact_primary = contactPrimary
@@ -61,6 +62,7 @@ export async function updateProfile(formData: FormData) {
   if (specialization) updates.specialization = specialization
   if (yearsRaw) updates.years_of_experience = Number(yearsRaw)
   if (cvUrl) updates.cv_url = cvUrl
+  if (linkedinUrl !== null) updates.linkedin_url = linkedinUrl || null
 
   const { error } = await admin
     .from('recruiters')

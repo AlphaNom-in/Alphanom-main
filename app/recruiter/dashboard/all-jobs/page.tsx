@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import JobsView from './JobsView'
 
 export const dynamic = 'force-dynamic'
@@ -41,22 +42,34 @@ export default async function Page({
 
   const { data: jobs } = await query.order('created_at', { ascending: false })
 
-  // Fetch total submission counts for all fetched jobs (across all recruiters)
   const jobIds = (jobs ?? []).map((j: any) => j.id)
+
+  // Fetch submission counts + current recruiter's saved job IDs in parallel
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: recruiter } = user
+    ? await supabase.from('recruiters').select('id').eq('user_id', user.id).single()
+    : { data: null }
+
+  const [subResult, savedResult] = await Promise.all([
+    jobIds.length > 0
+      ? admin.from('candidate_submissions').select('job_post_id').in('job_post_id', jobIds)
+      : Promise.resolve({ data: [] }),
+    recruiter?.id
+      ? supabase.from('recruiter_saved_jobs').select('job_post_id').eq('recruiter_id', recruiter.id)
+      : Promise.resolve({ data: [] }),
+  ])
+
   const submissionCounts: Record<string, number> = {}
-  if (jobIds.length > 0) {
-    const { data: subData } = await admin
-      .from('candidate_submissions')
-      .select('job_post_id')
-      .in('job_post_id', jobIds)
-    subData?.forEach((s: any) => {
-      submissionCounts[s.job_post_id] = (submissionCounts[s.job_post_id] ?? 0) + 1
-    })
-  }
+  subResult.data?.forEach((s: any) => {
+    submissionCounts[s.job_post_id] = (submissionCounts[s.job_post_id] ?? 0) + 1
+  })
+
+  const savedJobIds = new Set((savedResult.data ?? []).map((s: any) => s.job_post_id as string))
 
   return (
     <div style={{ height: '100%', background: '#fff', borderRadius: '16px', border: '1px solid #D0DBE8', overflow: 'hidden', boxShadow: '0 2px 12px rgba(3,38,85,0.04)' }}>
-      <JobsView jobs={jobs ?? []} submissionCounts={submissionCounts} />
+      <JobsView jobs={jobs ?? []} submissionCounts={submissionCounts} savedJobIds={savedJobIds} />
     </div>
   )
 }

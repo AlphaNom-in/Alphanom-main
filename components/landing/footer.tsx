@@ -12,40 +12,43 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   {
     heading: 'Platform',
     links: [
-      { label: 'How It Works',       href: '/how-it-works'          },
-      { label: 'For Employers',       href: '/instructions/employers' },
-      { label: 'For Freelance Recruiters', href: '/instructions/recruiters' },
-      { label: 'Pricing',             href: '/pricing'               },
-      { label: 'Customers',           href: '/customers'             },
+      { label: 'How It Works',            href: '/how-it-works'            },
+      { label: 'For Employers',           href: '/instructions/employers'  },
+      { label: 'For Freelance Recruiters',href: '/instructions/recruiters' },
+      { label: 'Pricing',                 href: '/pricing'                 },
+      { label: 'Customers',               href: '/customers'               },
+      { label: 'Employer Sign Up',        href: '/employer/signup'         },
+      { label: 'Recruiter Sign Up',       href: '/recruiter/signup'        },
     ],
   },
   {
     heading: 'Company',
     links: [
-      { label: 'About Us',   href: '/about'   },
-      { label: 'Careers',    href: '/careers' },
-      { label: 'Blog',       href: '/blog'    },
-      { label: 'Press',      href: '/press'   },
-      { label: 'Contact',    href: '/contact' },
+      { label: 'About Us',  href: '/about'   },
+      { label: 'Careers',   href: '/careers' },
+      { label: 'Blog',      href: '/blog'    },
+      { label: 'Press',     href: '/press'   },
+      { label: 'Contact',   href: '/contact' },
     ],
   },
   {
     heading: 'Support',
     links: [
-      { label: 'Help Centre',        href: '/help'           },
-      { label: 'FAQs',               href: '/faqs'           },
-      { label: 'Recruiter Helpdesk', href: '/helpdesk'       },
-      { label: 'Employer Support',   href: '/employer-support'},
-      { label: 'Report an Issue',    href: '/report'         },
+      { label: 'Help Centre',        href: '/help'                         },
+      { label: 'FAQs',               href: '/faqs'                         },
+      { label: 'Recruiter Helpdesk', href: '/recruiter/dashboard/helpdesk' },
+      { label: 'Employer Support',   href: '/employer-support'             },
+      { label: 'Report an Issue',    href: '/report'                       },
     ],
   },
   {
     heading: 'Legal',
     links: [
-      { label: 'Privacy Policy',    href: '/privacy'  },
-      { label: 'Terms of Service',  href: '/terms'    },
-      { label: 'Cookie Policy',     href: '/cookies'  },
-      { label: 'Refund Policy',     href: '/refunds'  },
+      { label: 'Privacy Policy',   href: '/privacy'         },
+      { label: 'Employer Terms',   href: '/terms/employer'  },
+      { label: 'Recruiter Terms',  href: '/terms/recruiter' },
+      { label: 'Cookie Policy',    href: '/cookies'         },
+      { label: 'Refund Policy',    href: '/refunds'         },
     ],
   },
 ]
@@ -242,7 +245,7 @@ export default function Footer() {
                 hello@alphanom.in
               </a>
               <a
-                href="tel:+919XXXXXXXXX"
+                href="tel:+918888298955"
                 style={{
                   fontSize: '0.8rem',
                   fontWeight: 500,
@@ -259,7 +262,7 @@ export default function Footer() {
                 <svg aria-hidden="true" style={{ width: '13px', height: '13px', flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                 </svg>
-                +91 9X XXXX XXXX
+                +91 88882 98955
               </a>
             </div>
           </div>

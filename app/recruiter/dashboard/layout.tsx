@@ -22,7 +22,7 @@ export default async function Layout({
 
   const { data: recruiter } = await supabase
     .from('recruiters')
-    .select('id, full_name, years_of_experience')
+    .select('id, full_name, years_of_experience, linkedin_url')
     .eq('user_id', user.id)
     .single()
 
@@ -30,8 +30,8 @@ export default async function Layout({
   const pathname = headersList.get('x-pathname') ?? ''
 
   const profileIncomplete =
-    !recruiter?.years_of_experience &&
-    recruiter?.years_of_experience !== 0
+    (!recruiter?.years_of_experience && recruiter?.years_of_experience !== 0) ||
+    !recruiter?.linkedin_url
 
   const onCompleteRoute = pathname === '/recruiter/dashboard/profile/complete'
 

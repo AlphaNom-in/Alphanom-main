@@ -25,10 +25,19 @@ export default function RecruiterSignupPage() {
   const [resent,         setResent]         = useState(false)
   const [loading,        setLoading]        = useState(false)
   const [error,          setError]          = useState('')
+  const [agreedToTerms,  setAgreedToTerms]  = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (!/^\d{10}$/.test(contactPrimary)) {
+      setError('Contact number must be exactly 10 digits.')
+      return
+    }
+    if (!agreedToTerms) {
+      setError('Please read and agree to the Terms & Conditions to continue.')
+      return
+    }
     try {
       setLoading(true)
       const result = await signUpRecruiter({ full_name: fullName, email, password, contact_primary: contactPrimary })
@@ -114,8 +123,25 @@ export default function RecruiterSignupPage() {
                     </div>
                   </Field>
                   <Field label="Primary Contact Number">
-                    <input className="auth-input" type="text" value={contactPrimary} onChange={e => setContactPrimary(e.target.value)} placeholder="+91 98765 43210" required/>
+                    <input className="auth-input" type="tel" inputMode="numeric" maxLength={10} value={contactPrimary} onChange={e => setContactPrimary(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" required/>
                   </Field>
+
+                  {/* Terms agreement */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 14px', background: agreedToTerms ? '#F0FBF9' : '#F8FAFC', border: `1px solid ${agreedToTerms ? 'rgba(15,185,177,0.3)' : '#E2EAF3'}`, borderRadius: '9px', transition: 'all 0.2s' }}>
+                    <input
+                      type="checkbox"
+                      id="rec-terms"
+                      checked={agreedToTerms}
+                      onChange={e => setAgreedToTerms(e.target.checked)}
+                      style={{ marginTop: '2px', accentColor: '#0FB9B1', width: '15px', height: '15px', flexShrink: 0, cursor: 'pointer' }}
+                    />
+                    <label htmlFor="rec-terms" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.76rem', color: '#5A7A9F', lineHeight: 1.55, cursor: 'pointer' }}>
+                      I have read and agree to the{' '}
+                      <a href="/terms/recruiter" target="_blank" rel="noopener noreferrer" style={{ color: '#0FB9B1', fontWeight: 700, textDecoration: 'underline' }}>
+                        AlphaNom Recruiter Terms & Conditions
+                      </a>
+                    </label>
+                  </div>
 
                   <SubmitBtn loading={loading} label="Create Account & Verify Email" bg="#0FB9B1" />
 

@@ -4,14 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 const EMPLOYER_POINTS = [
-  'Access 1,500+ specialist recruiters instantly',
+  'Access 140+ specialist recruiters instantly',
   'First candidates arrive within 48 hours',
   'Pay only when you hire — zero upfront cost',
   'Real-time dashboard to track every submission',
 ]
 
 const RECRUITER_POINTS = [
-  'Browse 200+ verified, active job briefs',
+  'Browse verified, active job briefs from growing companies',
   'Submit candidates with one click',
   'Transparent fee structure, fast payouts',
   'Work on roles that match your domain',
@@ -204,10 +204,10 @@ export default function CTABanner() {
           <div style={{ position: 'absolute', left: '-40px', bottom: '-40px', width: '180px', height: '180px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)', pointerEvents: 'none' }}/>
 
           {[
-            { value: '200+',   label: 'Companies Hiring',  color: '#0FB9B1' },
-            { value: '1,500+', label: 'Active Recruiters', color: '#fff'    },
-            { value: '8,000+', label: 'Roles Closed',      color: '#0FB9B1' },
-            { value: '95%',    label: 'Success Rate',       color: '#fff'    },
+            { value: '22+',  label: 'Companies Onboarded', color: '#0FB9B1' },
+            { value: '140+', label: 'Active Recruiters',   color: '#fff'    },
+            { value: '85+',  label: 'Roles Filled',        color: '#0FB9B1' },
+            { value: '48h',  label: 'Avg. First Match',    color: '#fff'    },
           ].map((s, i) => (
             <div key={i} style={{ position: 'relative', zIndex: 1, textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', padding: '0 0.5rem' }}>
               <p style={{ fontFamily: 'var(--font-ui)', fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)', fontWeight: 800, color: s.color, margin: 0, lineHeight: 1, letterSpacing: '-0.03em' }}>
