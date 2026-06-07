@@ -1,9 +1,12 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /auth/*
+Disallow: */login
+Disallow: */signup
 
 # Host
-Host: https://www.alphanom.in/
+Host: https://alphanom.in
 
 # Sitemaps
-Sitemap: https://www.alphanom.in/sitemap.xml
+Sitemap: https://alphanom.in/sitemap.xml
