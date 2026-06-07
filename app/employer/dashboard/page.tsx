@@ -140,11 +140,15 @@ export default async function Page() {
         <div aria-hidden style={{ position: 'absolute', right: '80px', bottom: '-40px', width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(15,185,177,0.06)', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '18px' }}>
-          {/* Company initial avatar */}
-          <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#0FB9B1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)' }}>
-            <span style={{ fontFamily: 'var(--font-ui)', fontSize: '1.5rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
-              {companyInitial}
-            </span>
+          {/* Company avatar — logo if available, else initial */}
+          <div style={{ width: '52px', height: '52px', borderRadius: '14px', overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)', background: employer?.logo_url ? '#fff' : '#0FB9B1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {employer?.logo_url ? (
+              <img src={employer.logo_url} alt={employer.company_name ?? ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '1.5rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                {companyInitial}
+              </span>
+            )}
           </div>
 
           <div style={{ flex: 1 }}>

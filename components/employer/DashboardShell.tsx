@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 type Props = {
   children: React.ReactNode
   companyName: string
+  logoUrl?: string | null
   isProfileComplete: boolean
   initialUnreadCount?: number
 }
@@ -45,7 +46,7 @@ const NAV = [
   },
 ]
 
-export default function DashboardShell({ children, companyName, isProfileComplete, initialUnreadCount = 0 }: Props) {
+export default function DashboardShell({ children, companyName, logoUrl, isProfileComplete, initialUnreadCount = 0 }: Props) {
   const pathname    = usePathname()
   const router      = useRouter()
   const pageTitle   = PAGE_TITLES[pathname] ?? 'Dashboard'
@@ -274,13 +275,17 @@ export default function DashboardShell({ children, companyName, isProfileComplet
                 textDecoration: 'none', position: 'relative' as const,
               }}>
                 <div style={{
-                  width: '28px', height: '28px', borderRadius: '7px',
-                  background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
+                  width: '28px', height: '28px', borderRadius: '7px', overflow: 'hidden',
+                  background: logoUrl ? '#fff' : 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
-                  <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>
-                    {companyName ? initials(companyName) : 'EM'}
-                  </span>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>
+                      {companyName ? initials(companyName) : 'EM'}
+                    </span>
+                  )}
                 </div>
                 <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
                   {companyName || 'My Account'}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { unsaveJob } from '@/lib/recruiter/unsaveJob'
@@ -40,6 +40,45 @@ function avatarColor(name: string | null) {
   return AVATARS[name.charCodeAt(0) % AVATARS.length]
 }
 
+function SubmissionBadge({ count }: { count: number }) {
+  const low = count < 10
+  return (
+    <span style={{
+      fontFamily: 'var(--font-ui)', fontSize: '0.58rem', fontWeight: 600,
+      color: low ? '#0A9E97' : '#5A7A9F',
+      background: low ? '#D8F0EB' : '#EEF3F8',
+      border: `1px solid ${low ? 'rgba(15,185,177,0.2)' : '#D0DBE8'}`,
+      borderRadius: '4px', padding: '2px 6px', whiteSpace: 'nowrap' as const,
+    }}>
+      {count === 0 ? 'Be first' : `${count} submitted`}
+    </span>
+  )
+}
+
+function ReadMore({ children, maxHeight = 140 }: { children: React.ReactNode; maxHeight?: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const [overflows, setOverflows] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (ref.current) setOverflows(ref.current.scrollHeight > maxHeight + 4)
+  }, [children, maxHeight])
+  return (
+    <div>
+      <div ref={ref} style={{ position: 'relative', maxHeight: expanded ? undefined : maxHeight, overflow: 'hidden' }}>
+        {children}
+        {!expanded && overflows && (
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '52px', background: 'linear-gradient(to bottom, transparent, #fff)', pointerEvents: 'none' }} />
+        )}
+      </div>
+      {overflows && (
+        <button onClick={() => setExpanded(e => !e)} style={{ marginTop: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#0FB9B1', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          {expanded ? 'Read less ↑' : 'Read more ↓'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function JobDescription({ text }: { text: string }) {
   const lines = text.split(/\n+/).map((l: string) => l.trim()).filter(Boolean)
   return (
@@ -66,7 +105,7 @@ function JobDescription({ text }: { text: string }) {
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
-export default function MySavedJobsView({ savedJobs }: { savedJobs: any[] }) {
+export default function MySavedJobsView({ savedJobs, submissionCounts }: { savedJobs: any[]; submissionCounts: Record<string, number> }) {
   const firstJobId = savedJobs[0]?.job_posts?.id ?? null
   const [selectedId, setSelectedId] = useState<string | null>(firstJobId)
   const [unsaving, setUnsaving] = useState<string | null>(null)
@@ -166,10 +205,14 @@ export default function MySavedJobsView({ savedJobs }: { savedJobs: any[] }) {
 
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', paddingRight: '28px' }}>
                   {/* Avatar */}
-                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: isAct ? 1 : 0.55 }}>
-                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>
-                      {initials(emp?.company_name ?? null)}
-                    </span>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', overflow: 'hidden', background: emp?.logo_url ? '#fff' : bg, border: emp?.logo_url ? '1px solid #D0DBE8' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: isAct ? 1 : 0.55 }}>
+                    {emp?.logo_url ? (
+                      <img src={emp.logo_url} alt={emp?.company_name ?? ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>
+                        {initials(emp?.company_name ?? null)}
+                      </span>
+                    )}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -197,6 +240,7 @@ export default function MySavedJobsView({ savedJobs }: { savedJobs: any[] }) {
                           {bMin}{bMin && bMax ? ' – ' : ''}{bMax} PA
                         </span>
                       )}
+                      <SubmissionBadge count={submissionCounts[job.id] ?? 0} />
                       <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.6rem', color: '#B0BEC5', marginLeft: 'auto' }}>
                         Saved {timeAgo(saved.saved_at)}
                       </span>
@@ -225,10 +269,14 @@ export default function MySavedJobsView({ savedJobs }: { savedJobs: any[] }) {
 
                 {/* Company row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
-                  <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>
-                      {initials(employer?.company_name ?? null)}
-                    </span>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '14px', overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', background: employer?.logo_url ? '#fff' : avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {employer?.logo_url ? (
+                      <img src={employer.logo_url} alt={employer?.company_name ?? ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>
+                        {initials(employer?.company_name ?? null)}
+                      </span>
+                    )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' as const }}>
@@ -319,7 +367,7 @@ export default function MySavedJobsView({ savedJobs }: { savedJobs: any[] }) {
                   <div style={{ width: '3px', height: '16px', background: '#0FB9B1', borderRadius: '2px' }} />
                   <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 800, color: '#032655', textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: 0 }}>About the Job</h2>
                 </div>
-                <JobDescription text={selected.recruiter_note} />
+                <ReadMore><JobDescription text={selected.recruiter_note} /></ReadMore>
               </div>
             )}
 
@@ -387,34 +435,64 @@ export default function MySavedJobsView({ savedJobs }: { savedJobs: any[] }) {
                   <div style={{ width: '3px', height: '16px', background: '#5A7A9F', borderRadius: '2px' }} />
                   <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 800, color: '#032655', textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: 0 }}>About the Company</h2>
                 </div>
+
+                {/* Logo + name row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
-                  <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 800, color: '#fff' }}>
-                      {initials(employer.company_name)}
-                    </span>
+                  <div style={{ width: '52px', height: '52px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, background: employer.logo_url ? '#fff' : avatarBg, border: '1px solid #D0DBE8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {employer.logo_url ? (
+                      <img src={employer.logo_url} alt={employer.company_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 800, color: '#fff' }}>{initials(employer.company_name)}</span>
+                    )}
                   </div>
                   <div>
-                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.95rem', fontWeight: 700, color: '#032655', margin: '0 0 3px' }}>{employer.company_name}</p>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.95rem', fontWeight: 700, color: '#032655', margin: '0 0 4px' }}>{employer.company_name}</p>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
                       {employer.industry && <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 600, color: '#5A7A9F', background: '#EEF3F8', borderRadius: '4px', padding: '2px 8px' }}>{employer.industry}</span>}
+                      {employer.company_size && <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 600, color: '#5A7A9F', background: '#EEF3F8', borderRadius: '4px', padding: '2px 8px' }}>👥 {employer.company_size}</span>}
+                      {employer.founded_year && <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#96AFCA' }}>Est. {employer.founded_year}</span>}
                       {employer.is_verified && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#0A9E97', background: '#D8F0EB', borderRadius: '4px', padding: '2px 7px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
                           <svg width="8" height="8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          Verified Employer
+                          Verified
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                {employer.company_address && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '10px 14px', background: '#F5F8FC', borderRadius: '9px', border: '1px solid #EEF3F8' }}>
-                    <svg width="13" height="13" fill="none" stroke="#96AFCA" strokeWidth={1.8} viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: '1px' }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                    </svg>
-                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#5A7A9F', margin: 0, lineHeight: 1.5 }}>{employer.company_address}</p>
-                  </div>
+
+                {/* Overview */}
+                {employer.company_overview && (
+                  <ReadMore maxHeight={96}>
+                    <JobDescription text={employer.company_overview} />
+                  </ReadMore>
                 )}
+
+                {/* Info row: website + headquarters */}
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
+                  {employer.company_website && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="13" height="13" fill="none" stroke="#96AFCA" strokeWidth={1.8} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" />
+                      </svg>
+                      <a href={employer.company_website} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#0FB9B1', fontWeight: 600, textDecoration: 'none', wordBreak: 'break-all' as const }}>
+                        {employer.company_website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
+                  {employer.company_address && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '10px 14px', background: '#F5F8FC', borderRadius: '9px', border: '1px solid #EEF3F8' }}>
+                      <svg width="13" height="13" fill="none" stroke="#96AFCA" strokeWidth={1.8} viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: '1px' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      <div>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.6rem', fontWeight: 700, color: '#96AFCA', letterSpacing: '0.06em', textTransform: 'uppercase' as const, margin: '0 0 2px' }}>Headquarters</p>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#5A7A9F', margin: 0, lineHeight: 1.5 }}>{employer.company_address}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

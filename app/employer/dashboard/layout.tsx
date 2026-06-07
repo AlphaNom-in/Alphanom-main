@@ -26,7 +26,7 @@ export default async function Layout({
   const [employerResult, notifResult] = await Promise.all([
     supabase
       .from('employers')
-      .select('company_name, industry, company_address')
+      .select('company_name, industry, company_address, logo_url')
       .eq('user_id', user.id)
       .single(),
     supabase
@@ -46,6 +46,7 @@ export default async function Layout({
   return (
     <DashboardShell
       companyName={employer?.company_name ?? ''}
+      logoUrl={employer?.logo_url ?? null}
       isProfileComplete={isProfileComplete}
       initialUnreadCount={notifResult.count ?? 0}
     >

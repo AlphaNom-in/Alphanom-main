@@ -23,15 +23,28 @@ export default async function Page() {
         budget_min, budget_max, notice_period, status,
         created_at, recruiter_note, jd_pdf_url,
         mandatory_criteria, preferred_criteria, preferred_companies,
-        employers (company_name, logo_url, industry, company_address, is_verified)
+        employers (company_name, logo_url, industry, company_address, is_verified, company_overview, company_website, company_size, founded_year)
       )
     `)
     .eq('recruiter_id', recruiter.id)
     .order('saved_at', { ascending: false })
 
+  // Fetch total submission counts for each saved job (all recruiters)
+  const jobIds = (savedJobs ?? []).map((s: any) => s.job_posts?.id).filter(Boolean)
+  const submissionCounts: Record<string, number> = {}
+  if (jobIds.length > 0) {
+    const { data: subData } = await admin
+      .from('candidate_submissions')
+      .select('job_post_id')
+      .in('job_post_id', jobIds)
+    subData?.forEach((s: any) => {
+      submissionCounts[s.job_post_id] = (submissionCounts[s.job_post_id] ?? 0) + 1
+    })
+  }
+
   return (
     <div style={{ height: '100%', background: '#fff', borderRadius: '16px', border: '1px solid #D0DBE8', overflow: 'hidden', boxShadow: '0 2px 12px rgba(3,38,85,0.04)' }}>
-      <MySavedJobsView savedJobs={savedJobs ?? []} />
+      <MySavedJobsView savedJobs={savedJobs ?? []} submissionCounts={submissionCounts} />
     </div>
   )
 }

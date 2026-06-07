@@ -13,6 +13,11 @@ export type EmployerProfile = {
   logo_url: string | null
   is_verified: boolean
   created_at: string
+  // Extended company details
+  company_overview: string | null
+  company_website:  string | null
+  company_size:     string | null
+  founded_year:     number | null
 }
 
 export function isProfileComplete(profile: EmployerProfile | null): boolean {
@@ -22,9 +27,11 @@ export function isProfileComplete(profile: EmployerProfile | null): boolean {
 
 export function profileCompletionSteps(profile: EmployerProfile | null) {
   return [
-    { label: 'Industry',          done: !!profile?.industry,          required: true  },
-    { label: 'Company Address',   done: !!profile?.company_address,   required: true  },
-    { label: 'Secondary Contact', done: !!profile?.contact_secondary, required: false },
+    { label: 'Industry',          done: !!profile?.industry,           required: true  },
+    { label: 'Headquarters',      done: !!profile?.company_address,    required: true  },
+    { label: 'Company Overview',  done: !!profile?.company_overview,   required: false },
+    { label: 'Logo',              done: !!profile?.logo_url,           required: false },
+    { label: 'Secondary Contact', done: !!profile?.contact_secondary,  required: false },
   ]
 }
 
@@ -36,7 +43,9 @@ export function profileCompletionPercent(profile: EmployerProfile | null): numbe
 
 export async function updateEmployerProfile(data: Partial<Pick<
   EmployerProfile,
-  'company_name' | 'contact_primary' | 'contact_secondary' | 'company_address' | 'industry' | 'logo_url'
+  | 'company_name' | 'contact_primary' | 'contact_secondary'
+  | 'company_address' | 'industry' | 'logo_url'
+  | 'company_overview' | 'company_website' | 'company_size' | 'founded_year'
 >>) {
   const supabase = createClient()
 
