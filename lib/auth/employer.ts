@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/client'
 import { sendSignupOtp, verifySignupOtp, checkEmailRegistered } from '@/lib/email/otp'
 
+// TODO: remove gmail.com from this list before production
 const FREE_DOMAINS = new Set([
-  'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.in', 'yahoo.co.uk',
+  'googlemail.com', 'yahoo.com', 'yahoo.co.in', 'yahoo.co.uk',
   'hotmail.com', 'hotmail.co.in', 'outlook.com', 'live.com', 'msn.com',
   'aol.com', 'icloud.com', 'me.com', 'mac.com', 'protonmail.com', 'pm.me',
   'tutanota.com', 'tutanota.de', 'zoho.com', 'yandex.com', 'yandex.ru',
@@ -14,7 +15,7 @@ export function validateCompanyEmail(email: string): string | null {
   const domain = email.split('@')[1]?.toLowerCase()
   if (!domain) return 'Invalid email address.'
   if (FREE_DOMAINS.has(domain)) {
-    return 'Please use your company email. Gmail, Yahoo, and other personal providers are not accepted for employer accounts.'
+    return 'Please use your company email. Yahoo and other personal providers are not accepted for employer accounts.'
   }
   return null
 }

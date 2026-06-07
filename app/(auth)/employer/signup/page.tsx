@@ -137,7 +137,7 @@ export default function EmployerSignupPage() {
                       </div>
                     ) : (
                       <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.65rem', color:'#96AFCA', margin:'4px 0 0' }}>
-                        Use your company email — Gmail, Yahoo and personal emails not accepted
+                        Use your company or Gmail address — Yahoo and other personal emails not accepted
                       </p>
                     )}
                   </Field>
