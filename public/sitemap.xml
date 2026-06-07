@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.alphanom.in/</loc>
-    <lastmod>2026-06-07</lastmod>
-  </url>
-  <url>
-    <loc>https://www.alphanom.in/</loc>
-    <lastmod>2026-06-07</lastmod>
-  </url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://www.alphanom.in</loc><lastmod>2026-06-07T16:27:39.024Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/about</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/auth/employer/forgot-password</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/auth/recruiter/forgot-password</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/careers</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/customers</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/employer/login</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/employer/signup</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/instructions/employers</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/instructions/recruiters</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/recruiter/login</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/recruiter/signup</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/terms/employer</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.alphanom.in/terms/recruiter</loc><lastmod>2026-06-07T16:27:39.025Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
 </urlset>
