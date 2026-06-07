@@ -43,4 +43,56 @@ export async function updateCandidateStatus(
   revalidatePath('/employer/dashboard')
   revalidatePath('/recruiter/dashboard/all-jobs')
   revalidatePath('/recruiter/dashboard/my-jobs')
+
+  // In-app notification → recruiter who submitted this candidate (non-blocking)
+  ;(async () => {
+    const [{ data: sub }, { data: jobPost }] = await Promise.all([
+      admin.from('candidate_submissions').select('candidate_name, recruiter_id').eq('id', submissionId).single(),
+      admin.from('job_posts').select('title').eq('id', jobId).single(),
+    ])
+    if (!sub?.recruiter_id) return
+
+    const { data: recruiter } = await admin.from('recruiters').select('user_id').eq('id', sub.recruiter_id).single()
+    if (!recruiter?.user_id) return
+
+    const cand = sub.candidate_name
+    const role = jobPost?.title ?? 'a role'
+
+    type NotifContent = { title: string; body: string }
+    const STATUS_NOTIF: Record<string, NotifContent> = {
+      shortlisted: {
+        title: '⭐ Candidate Shortlisted!',
+        body:  `${cand} for "${role}" has been shortlisted by the employer. Great submission!`,
+      },
+      hired: {
+        title: '🎉 Candidate Hired — Congratulations!',
+        body:  `${cand} got hired for "${role}". Amazing work on this placement!`,
+      },
+      rejected: {
+        title: 'Candidate Not Selected',
+        body:  `${cand} for "${role}" was not selected. Keep submitting strong candidates.`,
+      },
+      saved_for_later: {
+        title: 'Candidate Saved for Later',
+        body:  `${cand} for "${role}" was saved by the employer — they may revisit.`,
+      },
+      in_pipeline: {
+        title: 'Candidate Back in Review',
+        body:  `${cand} for "${role}" has been moved back into the employer's review pipeline.`,
+      },
+    }
+
+    const content = STATUS_NOTIF[status] ?? {
+      title: `Candidate status updated`,
+      body:  `${cand} for "${role}" was moved to ${status}.`,
+    }
+
+    await admin.from('notifications').insert({
+      user_id: recruiter.user_id,
+      type:    'status_update',
+      title:   content.title,
+      body:    content.body,
+      link:    `/recruiter/dashboard/my-jobs/${jobId}`,
+    })
+  })().catch(err => console.error('[Status notification]', err))
 }

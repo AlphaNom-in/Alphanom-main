@@ -39,23 +39,35 @@ export default async function Layout({
     redirect('/recruiter/dashboard/profile/complete')
   }
 
-  // Earnings: sum of budget_max for shortlisted submissions as an estimate
-  let earnings = 0
-  if (recruiter?.id) {
-    const { data: shortlisted } = await supabase
-      .from('candidate_submissions')
-      .select('job_posts(budget_max)')
-      .eq('recruiter_id', recruiter.id)
-      .eq('status', 'shortlisted')
+  // Earnings + unread notification count — run in parallel
+  const [earningsResult, notifResult] = await Promise.all([
+    recruiter?.id
+      ? supabase
+          .from('candidate_submissions')
+          .select('job_posts(budget_max)')
+          .eq('recruiter_id', recruiter.id)
+          .eq('status', 'shortlisted')
+      : Promise.resolve({ data: [] }),
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false),
+  ])
 
-    // Estimate: 8.33% of annual CTC (1 month) as placement fee
-    earnings = (shortlisted ?? []).reduce((sum: number, s: any) => {
-      return sum + Math.round((s.job_posts?.budget_max ?? 0) * 0.0833)
-    }, 0)
-  }
+  // Estimate: 8.33% of annual CTC (1 month) as placement fee
+  const earnings = (earningsResult.data ?? []).reduce((sum: number, s: any) => {
+    return sum + Math.round((s.job_posts?.budget_max ?? 0) * 0.0833)
+  }, 0)
+
+  const unreadCount = notifResult.count ?? 0
 
   return (
-    <DashboardShell recruiterName={recruiter?.full_name ?? ''} earnings={earnings}>
+    <DashboardShell
+      recruiterName={recruiter?.full_name ?? ''}
+      earnings={earnings}
+      initialUnreadCount={unreadCount}
+    >
       {children}
     </DashboardShell>
   )

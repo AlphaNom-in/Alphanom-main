@@ -23,11 +23,20 @@ export default async function Layout({
     redirect('/')
   }
 
-  const { data: employer } = await supabase
-    .from('employers')
-    .select('company_name, industry, company_address')
-    .eq('user_id', user.id)
-    .single()
+  const [employerResult, notifResult] = await Promise.all([
+    supabase
+      .from('employers')
+      .select('company_name, industry, company_address')
+      .eq('user_id', user.id)
+      .single(),
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false),
+  ])
+
+  const employer = employerResult.data
 
   const isProfileComplete = !!(
     employer?.company_address?.trim() &&
@@ -38,6 +47,7 @@ export default async function Layout({
     <DashboardShell
       companyName={employer?.company_name ?? ''}
       isProfileComplete={isProfileComplete}
+      initialUnreadCount={notifResult.count ?? 0}
     >
       {children}
     </DashboardShell>

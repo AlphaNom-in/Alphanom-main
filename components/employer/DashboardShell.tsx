@@ -2,13 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import LogoutButton from './LogoutButton'
+import NotificationPanel from '@/components/recruiter/NotificationPanel'
+import { createClient } from '@/lib/supabase/client'
 
 type Props = {
   children: React.ReactNode
   companyName: string
   isProfileComplete: boolean
+  initialUnreadCount?: number
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -42,10 +45,15 @@ const NAV = [
   },
 ]
 
-export default function DashboardShell({ children, companyName, isProfileComplete }: Props) {
-  const pathname = usePathname()
-  const router   = useRouter()
-  const pageTitle = PAGE_TITLES[pathname] ?? 'Dashboard'
+export default function DashboardShell({ children, companyName, isProfileComplete, initialUnreadCount = 0 }: Props) {
+  const pathname    = usePathname()
+  const router      = useRouter()
+  const pageTitle   = PAGE_TITLES[pathname] ?? 'Dashboard'
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
+
+  // Close panel on navigation
+  useEffect(() => { setIsNotifOpen(false) }, [pathname])
 
   useEffect(() => {
     function onVisibilityChange() {
@@ -55,163 +63,255 @@ export default function DashboardShell({ children, companyName, isProfileComplet
     return () => document.removeEventListener('visibilitychange', onVisibilityChange)
   }, [router])
 
+  // Supabase Realtime — increment badge when a new notification arrives
+  useEffect(() => {
+    const supabase = createClient()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (cancelled || !user) return
+
+      channel = supabase
+        .channel(`employer-notifs:${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, () => {
+          setUnreadCount(c => c + 1)
+        })
+        .subscribe()
+    })()
+
+    return () => {
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
+
+  // Refetch accurate count when panel closes
+  function handlePanelClose() {
+    setIsNotifOpen(false)
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .then(({ count }) => setUnreadCount(count ?? 0))
+    })
+  }
+
   const navItems = NAV.map(item => ({
     ...item,
     locked: item.label === 'Post Job' ? !isProfileComplete : false,
   }))
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F5F8FC' }}>
+    <>
+      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F5F8FC' }}>
 
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <aside style={{
-        width: '240px', flexShrink: 0, height: '100vh',
-        background: '#032655',
-        display: 'flex', flexDirection: 'column',
-      }}>
-        {/* Teal top accent */}
-        <div style={{ height: '3px', background: 'linear-gradient(90deg, #0FB9B1 0%, rgba(15,185,177,0.3) 100%)', flexShrink: 0 }} />
+        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+        <aside style={{
+          width: '240px', flexShrink: 0, height: '100vh',
+          background: '#032655',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {/* Teal top accent */}
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #0FB9B1 0%, rgba(15,185,177,0.3) 100%)', flexShrink: 0 }} />
 
-        {/* Brand */}
-        <div style={{ padding: '1.25rem 1.25rem 1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
-              background: 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 3px 12px rgba(15,185,177,0.4)',
-            }}>
-              <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 900, fontSize: '0.7rem', color: '#fff', letterSpacing: '0.04em' }}>AN</span>
-            </div>
-            <div>
-              <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>AlphaNom</p>
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.48rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' as const, marginTop: '1px' }}>Employer Portal</p>
+          {/* Brand */}
+          <div style={{ padding: '1.25rem 1.25rem 1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
+                background: 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 3px 12px rgba(15,185,177,0.4)',
+              }}>
+                <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 900, fontSize: '0.7rem', color: '#fff', letterSpacing: '0.04em' }}>AN</span>
+              </div>
+              <div>
+                <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>AlphaNom</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.48rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' as const, marginTop: '1px' }}>Employer Portal</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 1.25rem 0.875rem' }} />
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 1.25rem 0.875rem' }} />
 
-        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.28)', padding: '0 1.25rem', marginBottom: '6px' }}>
-          Navigation
-        </p>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.28)', padding: '0 1.25rem', marginBottom: '6px' }}>
+            Navigation
+          </p>
 
-        {/* Nav */}
-        <nav style={{ padding: '0 0.625rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {navItems.map((item) => {
-            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
-            return (
-              <Link key={item.href} href={item.locked ? '#' : item.href} style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '9px 11px', borderRadius: '9px', textDecoration: 'none',
-                fontFamily: 'var(--font-ui)', fontSize: '0.875rem',
-                fontWeight: active ? 700 : 500,
-                color: active ? '#fff' : item.locked ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.52)',
-                background: active ? 'rgba(15,185,177,0.16)' : 'transparent',
-                borderLeft: active ? '2.5px solid #0FB9B1' : '2.5px solid transparent',
-                pointerEvents: item.locked ? 'none' : 'auto',
+          {/* Nav */}
+          <nav style={{ padding: '0 0.625rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {navItems.map((item) => {
+              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+              return (
+                <Link key={item.href} href={item.locked ? '#' : item.href} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '9px 11px', borderRadius: '9px', textDecoration: 'none',
+                  fontFamily: 'var(--font-ui)', fontSize: '0.875rem',
+                  fontWeight: active ? 700 : 500,
+                  color: active ? '#fff' : item.locked ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.52)',
+                  background: active ? 'rgba(15,185,177,0.16)' : 'transparent',
+                  borderLeft: active ? '2.5px solid #0FB9B1' : '2.5px solid transparent',
+                  pointerEvents: item.locked ? 'none' : 'auto',
+                }}>
+                  <span style={{ color: active ? '#0FB9B1' : item.locked ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.45)' }}>
+                    {item.icon}
+                  </span>
+                  {item.label}
+                  {item.locked && (
+                    <svg fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={2} viewBox="0 0 24 24" style={{ width: '11px', height: '11px', marginLeft: 'auto', flexShrink: 0 }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                  )}
+                  {!item.locked && active && (
+                    <div style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0 }} />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div style={{ flex: 1 }} />
+
+          {/* Profile incomplete nudge */}
+          {!isProfileComplete && (
+            <div style={{ margin: '0 0.625rem 0.75rem' }}>
+              <Link href="/employer/dashboard/profile" style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 12px', borderRadius: '9px', textDecoration: 'none',
+                background: 'rgba(15,185,177,0.1)', border: '1px solid rgba(15,185,177,0.2)',
               }}>
-                <span style={{ color: active ? '#0FB9B1' : item.locked ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.45)' }}>
-                  {item.icon}
-                </span>
-                {item.label}
-                {item.locked && (
-                  <svg fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={2} viewBox="0 0 24 24" style={{ width: '11px', height: '11px', marginLeft: 'auto', flexShrink: 0 }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0, boxShadow: '0 0 0 3px rgba(15,185,177,0.2)' }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#0FB9B1', lineHeight: 1.2 }}>Complete Profile</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.38)', marginTop: '1px' }}>Unlock job posting</p>
+                </div>
+                <svg fill="none" stroke="#0FB9B1" strokeWidth={2} viewBox="0 0 24 24" style={{ width: '12px', height: '12px', flexShrink: 0 }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          )}
+
+          {/* Logout */}
+          <div style={{ padding: '0 0.625rem 1.5rem' }}>
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 0.625rem 0.75rem' }} />
+            <LogoutButton />
+          </div>
+        </aside>
+
+        {/* ── Right panel ─────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'clip' }}>
+
+          {/* Header */}
+          <header style={{
+            height: '60px', background: '#fff', borderBottom: '1px solid #D0DBE8',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 1.75rem', flexShrink: 0, zIndex: 10,
+          }}>
+            <div>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.13em', textTransform: 'uppercase' as const, color: '#96AFCA', marginBottom: '1px' }}>
+                Employer Dashboard
+              </p>
+              <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: '1rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {pageTitle}
+              </h1>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+
+              {/* ── Notification bell ───────────────────────── */}
+              <button
+                onClick={() => setIsNotifOpen(v => !v)}
+                title="Notifications"
+                style={{
+                  position: 'relative' as const,
+                  width: '40px', height: '40px', borderRadius: '11px',
+                  background: isNotifOpen
+                    ? 'linear-gradient(135deg, #032655 0%, #0a3570 100%)'
+                    : 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)',
+                  border: 'none',
+                  boxShadow: isNotifOpen
+                    ? '0 3px 10px rgba(3,38,85,0.28)'
+                    : '0 3px 10px rgba(15,185,177,0.38)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', flexShrink: 0,
+                  transition: 'all 0.18s ease',
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                </svg>
+                {unreadCount > 0 && (
+                  <div style={{
+                    position: 'absolute' as const, top: '-6px', right: '-6px',
+                    minWidth: '19px', height: '19px',
+                    background: '#E53E3E', borderRadius: '99px', border: '2.5px solid #fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
+                    boxShadow: '0 2px 6px rgba(229,62,62,0.45)',
+                  }}>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  </div>
                 )}
-                {!item.locked && active && (
-                  <div style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0 }} />
+              </button>
+
+              <Link href="/employer/dashboard/profile" style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: '#EEF3F8', border: '1px solid #D0DBE8',
+                borderRadius: '9px', padding: '4px 10px 4px 4px',
+                textDecoration: 'none', position: 'relative' as const,
+              }}>
+                <div style={{
+                  width: '28px', height: '28px', borderRadius: '7px',
+                  background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>
+                    {companyName ? initials(companyName) : 'EM'}
+                  </span>
+                </div>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                  {companyName || 'My Account'}
+                </span>
+                {!isProfileComplete && (
+                  <div style={{ position: 'absolute' as const, top: '-3px', right: '-3px', width: '9px', height: '9px', borderRadius: '50%', background: '#F5A623', border: '2px solid #fff' }} />
                 )}
               </Link>
-            )
-          })}
-        </nav>
+            </div>
+          </header>
 
-        <div style={{ flex: 1 }} />
-
-        {/* Profile incomplete nudge */}
-        {!isProfileComplete && (
-          <div style={{ margin: '0 0.625rem 0.75rem' }}>
-            <Link href="/employer/dashboard/profile" style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 12px', borderRadius: '9px', textDecoration: 'none',
-              background: 'rgba(15,185,177,0.1)', border: '1px solid rgba(15,185,177,0.2)',
-            }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0, boxShadow: '0 0 0 3px rgba(15,185,177,0.2)' }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#0FB9B1', lineHeight: 1.2 }}>Complete Profile</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.38)', marginTop: '1px' }}>Unlock job posting</p>
-              </div>
-              <svg fill="none" stroke="#0FB9B1" strokeWidth={2} viewBox="0 0 24 24" style={{ width: '12px', height: '12px', flexShrink: 0 }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
-        )}
-
-        {/* Logout */}
-        <div style={{ padding: '0 0.625rem 1.5rem' }}>
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 0.625rem 0.75rem' }} />
-          <LogoutButton />
+          {/* Content */}
+          <main style={{ flex: 1, padding: '1.75rem', overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            {children}
+          </main>
         </div>
-      </aside>
-
-      {/* ── Right panel ─────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'clip' }}>
-
-        {/* Header */}
-        <header style={{
-          height: '60px', background: '#fff', borderBottom: '1px solid #D0DBE8',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 1.75rem', flexShrink: 0, zIndex: 10,
-        }}>
-          <div>
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.13em', textTransform: 'uppercase' as const, color: '#96AFCA', marginBottom: '1px' }}>
-              Employer Dashboard
-            </p>
-            <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: '1rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.02em', lineHeight: 1 }}>
-              {pageTitle}
-            </h1>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#EEF3F8', border: '1px solid #D0DBE8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <svg fill="none" stroke="#5A7A9F" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '15px', height: '15px' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-              </svg>
-            </button>
-
-            <Link href="/employer/dashboard/profile" style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              background: '#EEF3F8', border: '1px solid #D0DBE8',
-              borderRadius: '9px', padding: '4px 10px 4px 4px',
-              textDecoration: 'none', position: 'relative' as const,
-            }}>
-              <div style={{
-                width: '28px', height: '28px', borderRadius: '7px',
-                background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>
-                  {companyName ? initials(companyName) : 'EM'}
-                </span>
-              </div>
-              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                {companyName || 'My Account'}
-              </span>
-              {!isProfileComplete && (
-                <div style={{ position: 'absolute' as const, top: '-3px', right: '-3px', width: '9px', height: '9px', borderRadius: '50%', background: '#F5A623', border: '2px solid #fff' }} />
-              )}
-            </Link>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main style={{ flex: 1, padding: '1.75rem', overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {children}
-        </main>
       </div>
-    </div>
+
+      {/* ── Notification panel + transparent backdrop ────────────── */}
+      {isNotifOpen && (
+        <>
+          <div
+            onClick={handlePanelClose}
+            style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'transparent' }}
+          />
+          <NotificationPanel
+            onClose={handlePanelClose}
+            onAllRead={() => setUnreadCount(0)}
+          />
+        </>
+      )}
+    </>
   )
 }

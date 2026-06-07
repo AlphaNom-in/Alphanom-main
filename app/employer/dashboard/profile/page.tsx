@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ensureEmployerProfile } from '@/hooks/useEmployer'
 import {
   updateEmployerProfile,
@@ -20,6 +21,7 @@ const INDUSTRIES = [
 export default function ProfilePage() {
   const [profile, setProfile] = useState<EmployerProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     ensureEmployerProfile().then((data) => {
@@ -164,8 +166,15 @@ export default function ProfilePage() {
           { key: 'company_address', label: 'Company Address *',value: profile.company_address ?? '',type: 'textarea', placeholder: '123 MG Road, Bangalore, Karnataka 560001', required: true },
         ]}
         onSave={async (data) => {
+          const wasComplete = isProfileComplete(profile)
           await updateEmployerProfile(data)
+          const updated = { ...profile!, ...data } as EmployerProfile
           setProfile((p) => p ? { ...p, ...data } : p)
+          if (!wasComplete && isProfileComplete(updated)) {
+            window.location.href = '/employer/dashboard/jobs'
+          } else {
+            router.refresh()
+          }
         }}
       />
 
@@ -184,6 +193,7 @@ export default function ProfilePage() {
         onSave={async (data) => {
           await updateEmployerProfile(data)
           setProfile((p) => p ? { ...p, ...data } : p)
+          router.refresh()
         }}
       />
 

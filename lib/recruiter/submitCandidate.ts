@@ -78,5 +78,34 @@ export async function submitCandidate(formData: FormData) {
   // Invalidate recruiter's own submission view
   revalidatePath('/recruiter/dashboard')
 
+  // In-app notification → employer who owns this job (non-blocking)
+  ;(async () => {
+    const { data: jobPost } = await admin
+      .from('job_posts')
+      .select('title, employer_id')
+      .eq('id', jobPostId)
+      .single()
+
+    if (!jobPost?.employer_id) return
+
+    const { data: employer } = await admin
+      .from('employers')
+      .select('user_id')
+      .eq('id', jobPost.employer_id)
+      .single()
+
+    if (!employer?.user_id) return
+
+    const candidateName = raw('candidate_name')
+
+    await admin.from('notifications').insert({
+      user_id: employer.user_id,
+      type:    'new_candidate',
+      title:   `New candidate for "${jobPost.title}"`,
+      body:    `${candidateName} was submitted for your opening. Review their profile and decide on the next steps.`,
+      link:    `/employer/dashboard/jobs/${jobPostId}/applicants`,
+    })
+  })().catch(err => console.error('[Employer notification]', err))
+
   return true
 }

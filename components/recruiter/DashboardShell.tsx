@@ -2,12 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import LogoutButton from '../employer/LogoutButton'
-
-function getInitials(name: string) {
-  return name.split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
-}
+import NotificationPanel from './NotificationPanel'
+import { createClient } from '@/lib/supabase/client'
 
 const PAGE_TITLES: Record<string, string> = {
   '/recruiter/dashboard':                  'Overview',
@@ -42,63 +40,22 @@ const NAV = [
   },
 ]
 
-function ProfileMenu({ name }: { name: string }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function onOut(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onOut)
-    return () => document.removeEventListener('mousedown', onOut)
-  }, [])
-
-  return (
-    <div ref={ref} style={{ position: 'relative' as const }}>
-      <button onClick={() => setOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#EEF3F8', border: '1px solid #D0DBE8', borderRadius: '9px', padding: '4px 10px 4px 4px', cursor: 'pointer' }}>
-        <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>{getInitials(name)}</span>
-        </div>
-        <span className="rdash-profile-name" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-          {name || 'My Account'}
-        </span>
-        <svg width="11" height="11" fill="none" stroke="#5A7A9F" strokeWidth={2} viewBox="0 0 24 24" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && (
-        <div style={{ position: 'absolute' as const, top: 'calc(100% + 8px)', right: 0, background: '#fff', border: '1px solid #D0DBE8', borderRadius: '14px', boxShadow: '0 8px 32px rgba(3,38,85,0.10)', minWidth: '190px', overflow: 'hidden', zIndex: 200 }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #EEF3F8' }}>
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 700, color: '#032655', margin: 0 }}>{name}</p>
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', color: '#96AFCA', margin: '2px 0 0' }}>Recruiter</p>
-          </div>
-          <Link href="/recruiter/dashboard/profile" onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 16px', textDecoration: 'none', color: '#032655', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 500 }}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-            My Profile
-          </Link>
-          <div style={{ padding: '8px 10px', borderTop: '1px solid #EEF3F8' }}>
-            <LogoutButton />
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function DashboardShell({
-  children, recruiterName, earnings = 0,
+  children, recruiterName, earnings = 0, initialUnreadCount = 0,
 }: {
   children: React.ReactNode
   recruiterName: string
   earnings?: number
+  initialUnreadCount?: number
 }) {
   const pathname = usePathname()
   const router   = useRouter()
-  const [navOpen, setNavOpen] = useState(false)
+  const [navOpen,       setNavOpen]       = useState(false)
+  const [isNotifOpen,   setIsNotifOpen]   = useState(false)
+  const [unreadCount,   setUnreadCount]   = useState(initialUnreadCount)
 
   useEffect(() => { setNavOpen(false) }, [pathname])
+  useEffect(() => { setIsNotifOpen(false) }, [pathname])
 
   useEffect(() => {
     function onVisibilityChange() {
@@ -109,9 +66,40 @@ export default function DashboardShell({
   }, [router])
 
   useEffect(() => {
+    const supabase = createClient()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (cancelled || !user) return
+      channel = supabase
+        .channel(`rdash-notifs:${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, () => setUnreadCount(c => c + 1))
+        .subscribe()
+    })()
+    return () => { cancelled = true; if (channel) supabase.removeChannel(channel) }
+  }, [])
+
+  useEffect(() => {
     document.body.style.overflow = navOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [navOpen])
+
+  function handlePanelClose() {
+    setIsNotifOpen(false)
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('notifications').select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id).eq('is_read', false)
+        .then(({ count }) => setUnreadCount(count ?? 0))
+    })
+  }
+
+  const abbr = recruiterName.split(' ').filter(Boolean).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() || 'R'
 
   const pageTitle = Object.entries(PAGE_TITLES)
     .find(([key]) => pathname === key || (!PAGE_TITLES[pathname] && pathname.startsWith(key + '/')))?.[1] ?? 'Dashboard'
@@ -125,12 +113,7 @@ export default function DashboardShell({
       <div style={{ padding: '1.25rem 1.25rem 1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
-              background: 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 3px 12px rgba(15,185,177,0.4)',
-            }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0, background: 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 12px rgba(15,185,177,0.4)' }}>
               <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 900, fontSize: '0.7rem', color: '#fff', letterSpacing: '0.04em' }}>AN</span>
             </div>
             <div>
@@ -163,13 +146,9 @@ export default function DashboardShell({
               background: active ? 'rgba(15,185,177,0.16)' : 'transparent',
               borderLeft: active ? '2.5px solid #0FB9B1' : '2.5px solid transparent',
             }}>
-              <span style={{ color: active ? '#0FB9B1' : 'rgba(255,255,255,0.45)' }}>
-                {item.icon}
-              </span>
+              <span style={{ color: active ? '#0FB9B1' : 'rgba(255,255,255,0.45)' }}>{item.icon}</span>
               {item.label}
-              {active && (
-                <div style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0 }} />
-              )}
+              {active && <div style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: '#0FB9B1', flexShrink: 0 }} />}
             </Link>
           )
         })}
@@ -196,6 +175,7 @@ export default function DashboardShell({
         .rdash-main { flex: 1; padding: 1.75rem; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
         .rdash-earnings { display: flex; align-items: center; gap: 7px; background: #D8F0EB; border: 1px solid rgba(15,185,177,0.4); border-radius: 8px; padding: 5px 12px; }
         .rdash-close-nav { display: none !important; }
+        .notif-panel { width: 420px; }
 
         @media (max-width: 768px) {
           .rdash-root { height: auto; min-height: 100vh; overflow: visible; flex-direction: column; }
@@ -210,6 +190,7 @@ export default function DashboardShell({
           .rdash-profile-name { display: none; }
           .rdash-close-nav { display: flex !important; }
           .rdash-page-subtitle { display: none; }
+          .notif-panel { width: 100vw !important; }
         }
 
         @media (max-width: 768px) {
@@ -257,6 +238,41 @@ export default function DashboardShell({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+              {/* Notification bell */}
+              <button
+                onClick={() => setIsNotifOpen(v => !v)}
+                title="Notifications"
+                style={{
+                  position: 'relative' as const,
+                  width: '40px', height: '40px', borderRadius: '11px',
+                  background: isNotifOpen
+                    ? 'linear-gradient(135deg, #032655 0%, #0a3570 100%)'
+                    : 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)',
+                  border: 'none',
+                  boxShadow: isNotifOpen ? '0 3px 10px rgba(3,38,85,0.28)' : '0 3px 10px rgba(15,185,177,0.38)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', flexShrink: 0, transition: 'all 0.18s ease',
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                </svg>
+                {unreadCount > 0 && (
+                  <div style={{
+                    position: 'absolute' as const, top: '-6px', right: '-6px',
+                    minWidth: '19px', height: '19px',
+                    background: '#E53E3E', borderRadius: '99px', border: '2.5px solid #fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
+                    boxShadow: '0 2px 6px rgba(229,62,62,0.45)',
+                  }}>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.5rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  </div>
+                )}
+              </button>
+
+              {/* Earnings */}
               <div className="rdash-earnings">
                 <svg width="13" height="13" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -268,13 +284,38 @@ export default function DashboardShell({
                   </p>
                 </div>
               </div>
-              <ProfileMenu name={recruiterName || 'Recruiter'} />
+
+              {/* Profile link */}
+              <Link
+                href="/recruiter/dashboard/profile"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: '#EEF3F8', border: '1px solid #D0DBE8',
+                  borderRadius: '9px', padding: '4px 10px 4px 4px',
+                  textDecoration: 'none',
+                }}
+              >
+                <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.55rem', color: '#fff' }}>{abbr}</span>
+                </div>
+                <span className="rdash-profile-name" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#032655', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                  {recruiterName || 'My Account'}
+                </span>
+              </Link>
             </div>
           </header>
 
           <main className="rdash-main">{children}</main>
         </div>
       </div>
+
+      {/* Notification panel + backdrop */}
+      {isNotifOpen && (
+        <>
+          <div onClick={handlePanelClose} style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'transparent' }} />
+          <NotificationPanel onClose={handlePanelClose} onAllRead={() => setUnreadCount(0)} />
+        </>
+      )}
     </>
   )
 }

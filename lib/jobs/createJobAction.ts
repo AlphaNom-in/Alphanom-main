@@ -24,7 +24,7 @@ export async function createJobAction(jobData: {
   if (!user) throw new Error('Not authenticated')
 
   const { data: employer } = await supabase
-    .from('employers').select('id').eq('user_id', user.id).single()
+    .from('employers').select('id, company_name').eq('user_id', user.id).single()
   if (!employer) throw new Error('Employer not found')
 
   const payload = {
@@ -46,8 +46,32 @@ export async function createJobAction(jobData: {
   revalidatePath('/employer/dashboard')
   revalidatePath('/recruiter/dashboard/all-jobs')
 
-  // Send batch notification to all recruiters (non-blocking — errors are logged, not thrown)
+  // Email notifications (non-blocking)
   notifyRecruitersNewJob(job.id).catch(err =>
     console.error('[Job notification] Failed to send recruiter emails:', err)
   )
+
+  // In-app notifications for all recruiters (non-blocking)
+  ;(async () => {
+    const { data: recruiters } = await admin.from('recruiters').select('user_id')
+    if (!recruiters?.length) return
+    const userIds = recruiters.map(r => r.user_id).filter((id): id is string => !!id)
+    if (!userIds.length) return
+
+    const meta = [jobData.location, jobData.work_model].filter(Boolean).join(' · ')
+    const title = `${employer.company_name ?? 'An employer'} is hiring — ${jobData.title}`
+    const body  = meta
+      ? `${meta} — Be the first to submit your candidates!`
+      : `Submit your best candidates for this new opening.`
+
+    await admin.from('notifications').insert(
+      userIds.map(uid => ({
+        user_id: uid,
+        type:    'new_job',
+        title,
+        body,
+        link:    `/recruiter/dashboard/all-jobs/${job.id}`,
+      }))
+    )
+  })().catch(err => console.error('[In-app notification] Failed:', err))
 }
