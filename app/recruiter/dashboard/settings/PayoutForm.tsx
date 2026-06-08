@@ -65,7 +65,7 @@ export default function PayoutForm({ bankAccountName, bankAccountNumber, bankIfs
               </div>
               <div>
                 <label style={lbl}>IFSC Code</label>
-                <input style={inp} name="bank_ifsc" defaultValue={bankIfsc ?? ''} placeholder="e.g. HDFC0001234" style={{ ...inp, textTransform: 'uppercase' }} />
+                <input name="bank_ifsc" defaultValue={bankIfsc ?? ''} placeholder="e.g. HDFC0001234" style={{ ...inp, textTransform: 'uppercase' }} />
               </div>
             </div>
           </div>
