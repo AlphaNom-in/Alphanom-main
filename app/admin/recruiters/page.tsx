@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import RecruiterActions       from './RecruiterActions'
+import Link                   from 'next/link'
 
 function initials(name: string) {
   return (name ?? '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'
@@ -82,10 +83,12 @@ export default async function AdminRecruitersPage() {
                     {/* Name */}
                     <td style={{ padding: '13px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0, background: 'linear-gradient(135deg,#032655,#0FB9B1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'linear-gradient(135deg,#032655,#0FB9B1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.68rem', color: '#fff' }}>{initials(r.full_name)}</span>
                         </div>
-                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#0F1C2E', margin: 0, whiteSpace: 'nowrap' }}>{r.full_name ?? '—'}</p>
+                        <Link href={`/admin/recruiters/${r.id}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#032655', margin: 0, whiteSpace: 'nowrap', textDecoration: 'none' }}>
+                          {r.full_name ?? '—'}
+                        </Link>
                       </div>
                     </td>
                     {/* Contact */}

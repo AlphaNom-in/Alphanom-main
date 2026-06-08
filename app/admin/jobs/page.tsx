@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import JobActions             from './JobActions'
+import Link                   from 'next/link'
 
 function fmtBudget(min: number | null, max: number | null) {
   if (!min && !max) return '—'
@@ -14,13 +15,21 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   closed: { bg: '#FFF5F5', color: '#C53030' },
 }
 
-export default async function AdminJobsPage() {
+export default async function AdminJobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ employer_id?: string }>
+}) {
+  const { employer_id } = await searchParams
   const admin = createAdminClient()
 
-  const { data: jobs } = await admin
+  let jobsQuery = admin
     .from('job_posts')
-    .select('id, title, department, location, work_model, budget_min, budget_max, status, created_at, employers(company_name)')
+    .select('id, title, department, location, work_model, budget_min, budget_max, status, created_at, employers(id, company_name)')
     .order('created_at', { ascending: false })
+  if (employer_id) jobsQuery = jobsQuery.eq('employer_id', employer_id)
+
+  const { data: jobs } = await jobsQuery
 
   const { data: subCounts } = await admin
     .from('candidate_submissions')
@@ -41,6 +50,29 @@ export default async function AdminJobsPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <style>{`.an-tr:hover td { background: #F8FAFC; }`}</style>
+
+      {/* Filter banner */}
+      {employer_id && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '8px', background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+          <svg width="14" height="14" fill="none" stroke="#032655" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
+          <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#032655', fontWeight: 600 }}>
+            Filtered by employer — showing {total} job{total !== 1 ? 's' : ''}
+          </span>
+          <Link
+            href={`/admin/employers/${employer_id}`}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, color: '#0FB9B1', textDecoration: 'none', marginLeft: '2px' }}
+          >
+            ← Back to employer
+          </Link>
+          <Link
+            href="/admin/jobs"
+            style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, color: '#6B7E93', textDecoration: 'none', padding: '4px 10px', borderRadius: '6px', background: '#fff', border: '1px solid #D0DBE8' }}
+          >
+            <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            Clear filter
+          </Link>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>

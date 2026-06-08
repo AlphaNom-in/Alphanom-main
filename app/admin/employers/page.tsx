@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import EmployerActions        from './EmployerActions'
+import Link                   from 'next/link'
 
 function initials(name: string) {
   return (name ?? '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'
@@ -91,7 +92,9 @@ export default async function AdminEmployersPage() {
                         <div style={{ width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0, background: '#EEF3F8', border: '1px solid #D0DBE8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.68rem', color: '#032655' }}>{initials(e.company_name ?? '')}</span>
                         </div>
-                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#0F1C2E', margin: 0, whiteSpace: 'nowrap' }}>{e.company_name ?? '—'}</p>
+                        <Link href={`/admin/employers/${e.id}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#032655', margin: 0, whiteSpace: 'nowrap', textDecoration: 'none' }}>
+                          {e.company_name ?? '—'}
+                        </Link>
                       </div>
                     </td>
                     {/* Email + Phone */}

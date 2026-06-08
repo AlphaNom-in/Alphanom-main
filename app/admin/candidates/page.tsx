@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import Link                   from 'next/link'
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; dot: string; label: string }> = {
   in_pipeline:     { bg: '#EEF3F8', color: '#5A7A9F', dot: '#96AFCA', label: 'In Pipeline' },
@@ -27,17 +28,18 @@ function avatarColor(name: string) {
 export default async function AdminCandidatesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; recruiter_id?: string }>
 }) {
-  const { status } = await searchParams
+  const { status, recruiter_id } = await searchParams
   const admin = createAdminClient()
 
   let subsQuery = admin
     .from('candidate_submissions')
-    .select('id, candidate_name, email, status, submitted_at, current_ctc, total_experience, job_posts(title, employers(company_name)), recruiters(full_name)')
+    .select('id, candidate_name, email, status, submitted_at, current_ctc, total_experience, job_posts(title, employers(company_name)), recruiters(id, full_name)')
     .order('submitted_at', { ascending: false })
     .limit(100)
   if (status && status !== 'all') subsQuery = subsQuery.eq('status', status)
+  if (recruiter_id) subsQuery = subsQuery.eq('recruiter_id', recruiter_id)
 
   const [queryResult, allResult] = await Promise.all([
     subsQuery,
@@ -87,6 +89,29 @@ export default async function AdminCandidatesPage({
           ))}
         </div>
       </div>
+
+      {/* Recruiter filter banner */}
+      {recruiter_id && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '8px', background: '#EDE9FE', border: '1px solid #DDD6FE' }}>
+          <svg width="14" height="14" fill="none" stroke="#7C3AED" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
+          <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', color: '#7C3AED', fontWeight: 600 }}>
+            Filtered by recruiter — showing {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
+          </span>
+          <Link
+            href={`/admin/recruiters/${recruiter_id}`}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, color: '#0FB9B1', textDecoration: 'none', marginLeft: '2px' }}
+          >
+            ← Back to recruiter
+          </Link>
+          <Link
+            href="/admin/candidates"
+            style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, color: '#6B7E93', textDecoration: 'none', padding: '4px 10px', borderRadius: '6px', background: '#fff', border: '1px solid #D0DBE8' }}
+          >
+            <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            Clear filter
+          </Link>
+        </div>
+      )}
 
       {/* Status tabs */}
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
