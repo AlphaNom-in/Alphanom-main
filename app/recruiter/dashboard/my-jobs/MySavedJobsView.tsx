@@ -253,9 +253,17 @@ export default function MySavedJobsView({ savedJobs, submissionCounts }: { saved
                       )}
                     </div>
                     {emp?.company_name && (
-                      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#5A7A9F', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                        {emp.company_name}
-                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '0 0 4px', overflow: 'hidden' }}>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#5A7A9F', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, minWidth: 0 }}>
+                          {emp.company_name}
+                        </p>
+                        {emp.is_verified && (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="#0A9E97" style={{ flexShrink: 0, marginTop: '1px' }}>
+                            <title>Verified Employer</title>
+                            <path d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.49 4.49 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.307 4.49 4.49 0 01-1.307-3.497A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                          </svg>
+                        )}
+                      </div>
                     )}
                     <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', color: '#96AFCA', margin: '0 0 6px' }}>
                       {[job.location, job.work_model].filter(Boolean).join(' · ')}
@@ -310,10 +318,10 @@ export default function MySavedJobsView({ savedJobs, submissionCounts }: { saved
                         {employer?.company_name ?? 'Company'}
                       </p>
                       {employer?.is_verified && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#0A9E97', background: '#D8F0EB', border: '1px solid rgba(15,185,177,0.25)', borderRadius: '4px', padding: '2px 7px' }}>
-                          <svg width="8" height="8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          Verified
-                        </span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A9E97" style={{ flexShrink: 0 }}>
+                          <title>Verified Employer</title>
+                          <path d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.49 4.49 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.307 4.49 4.49 0 01-1.307-3.497A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                        </svg>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const, alignItems: 'center' }}>
@@ -478,10 +486,10 @@ export default function MySavedJobsView({ savedJobs, submissionCounts }: { saved
                       {employer.company_size && <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 600, color: '#5A7A9F', background: '#EEF3F8', borderRadius: '4px', padding: '2px 8px' }}>👥 {employer.company_size}</span>}
                       {employer.founded_year && <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#96AFCA' }}>Est. {employer.founded_year}</span>}
                       {employer.is_verified && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#0A9E97', background: '#D8F0EB', borderRadius: '4px', padding: '2px 7px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
-                          <svg width="8" height="8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                          Verified
-                        </span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A9E97" style={{ flexShrink: 0 }}>
+                          <title>Verified Employer</title>
+                          <path d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.49 4.49 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.307 4.49 4.49 0 01-1.307-3.497A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"/>
+                        </svg>
                       )}
                     </div>
                   </div>
