@@ -9,7 +9,7 @@ export default async function Page() {
 
   const { data: employer } = await supabase
     .from('employers')
-    .select('company_address, industry')
+    .select('company_address, industry, default_work_model, default_notice_period')
     .eq('user_id', user?.id)
     .single()
 
@@ -97,7 +97,10 @@ export default async function Page() {
 
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-      <PostJobForm />
+      <PostJobForm
+        defaultWorkModel={employer?.default_work_model ?? undefined}
+        defaultNoticePeriod={employer?.default_notice_period ?? undefined}
+      />
     </div>
   )
 }

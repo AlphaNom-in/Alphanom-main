@@ -32,6 +32,7 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
   const [noticePeriod,    setNoticePeriod]    = useState('')
 
   // Step 3 — Online Presence
+  const [linkedinUrl,  setLinkedinUrl]  = useState('')
   const [portfolioUrl, setPortfolioUrl] = useState('')
 
   // Step 4 — Resume & Note
@@ -44,9 +45,14 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
       if (!candidateName.trim()) { setStepError('Full name is required.'); return false }
       if (!email.trim())         { setStepError('Email address is required.'); return false }
     }
+    if (step === 2) {
+      if (!linkedinUrl.trim())  { setStepError('LinkedIn profile URL is required.'); return false }
+      if (!portfolioUrl.trim()) { setStepError('Portfolio / GitHub URL is required.'); return false }
+    }
     if (step === 3) {
-      if (!resume)                { setStepError('Please upload the candidate\'s resume.'); return false }
-      if (!recruiterNote.trim())  { setStepError('Your note is required before submitting.'); return false }
+      if (!resume)                          { setStepError('Please upload the candidate\'s resume.'); return false }
+      if (!recruiterNote.trim())            { setStepError('Your note is required before submitting.'); return false }
+      if (/\d/.test(recruiterNote))         { setStepError('Your note must contain text only — numbers are not allowed.'); return false }
     }
     return true
   }
@@ -76,7 +82,8 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
       if (totalExperience) fd.append('total_experience', totalExperience)
       if (currentLocation) fd.append('current_location', currentLocation)
       if (noticePeriod)    fd.append('notice_period',    noticePeriod)
-      if (portfolioUrl)    fd.append('portfolio_url',    portfolioUrl)
+      fd.append('linkedin_url',  linkedinUrl)
+      fd.append('portfolio_url', portfolioUrl)
       fd.append('resume',         resume)
       fd.append('recruiter_note', recruiterNote)
       await submitCandidate(fd)
@@ -92,7 +99,7 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
     setStep(0); setStepError(''); setSubmitted(false)
     setCandidateName(''); setEmail('')
     setCurrentCtc(''); setTotalExperience(''); setCurrentLocation(''); setNoticePeriod('')
-    setPortfolioUrl(''); setResume(null); setRecruiterNote('')
+    setLinkedinUrl(''); setPortfolioUrl(''); setResume(null); setRecruiterNote('')
   }
 
   const progress = ((step + 1) / STEPS.length) * 100
@@ -274,14 +281,12 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
           {/* ── STEP 3: Online Presence ─────────────────────────────────── */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <Field label="Portfolio / GitHub URL">
-                <input style={inp} type="url" placeholder="https://…" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} autoFocus />
+              <Field label="LinkedIn Profile URL *">
+                <input style={inp} type="url" placeholder="https://linkedin.com/in/username" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} autoFocus />
               </Field>
-              <div style={{ background: '#F8FAFC', border: '1px solid #E8EEF4', borderRadius: '10px', padding: '12px 16px' }}>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#5A7A9F', margin: 0, lineHeight: 1.6 }}>
-                  This field is optional. A portfolio or GitHub link helps employers evaluate the candidate's work.
-                </p>
-              </div>
+              <Field label="Portfolio / GitHub URL *">
+                <input style={inp} type="url" placeholder="https://github.com/username" value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)} />
+              </Field>
             </div>
           )}
 
@@ -357,10 +362,18 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
               </ReviewSection>
 
               <ReviewSection label="Online Presence" onEdit={() => { setStep(2); setStepError('') }}>
-                {portfolioUrl
-                  ? <p style={{ ...rv.secondary, wordBreak: 'break-all' as const }}>{portfolioUrl}</p>
-                  : <p style={rv.empty}>No links added</p>
-                }
+                {linkedinUrl && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    <p style={{ ...rv.secondary, wordBreak: 'break-all' as const, margin: 0 }}>{linkedinUrl}</p>
+                  </div>
+                )}
+                {portfolioUrl && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <svg width="11" height="11" fill="none" stroke="#5A7A9F" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    <p style={{ ...rv.secondary, wordBreak: 'break-all' as const, margin: 0 }}>{portfolioUrl}</p>
+                  </div>
+                )}
               </ReviewSection>
 
               <ReviewSection label="Resume & Note" onEdit={() => { setStep(3); setStepError('') }}>

@@ -5,6 +5,7 @@ import StatusSelect from './StatusSelect'
 
 const STATUS = {
   in_pipeline:     { bg: '#EEF3F8', color: '#5A7A9F', accent: '#96AFCA', label: 'In Pipeline' },
+  in_review:       { bg: '#EDE9FE', color: '#7C3AED', accent: '#7C3AED', label: 'In Review' },
   shortlisted:     { bg: '#D8F0EB', color: '#0A9E97', accent: '#0FB9B1', label: 'Shortlisted ⭐' },
   saved_for_later: { bg: '#FFF8E7', color: '#B7791F', accent: '#F5A623', label: 'Saved for Later' },
   hired:           { bg: '#C6F6D5', color: '#276749', accent: '#22C55E', label: 'Hired ✓' },
@@ -41,7 +42,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
   const { data: applicants } = await supabase
     .from('candidate_submissions')
-    .select('id, candidate_name, email, current_ctc, current_location, total_experience, notice_period, resume_url, recruiter_note, status, submitted_at')
+    .select('id, candidate_name, email, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url, recruiter_note, status, submitted_at')
     .eq('job_post_id', jobId)
     .order('submitted_at', { ascending: false })
 
@@ -160,6 +161,18 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                           {a.email}
                         </a>
                       )}
+                      {a.linkedin_url && (
+                        <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#0A66C2', textDecoration: 'none', fontWeight: 600 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                          LinkedIn
+                        </a>
+                      )}
+                      {a.portfolio_url && (
+                        <a href={a.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#5A7A9F', textDecoration: 'none', fontWeight: 600 }}>
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                          Portfolio / GitHub
+                        </a>
+                      )}
                     </div>
                   </div>
 
@@ -269,7 +282,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                         View Resume
                       </a>
                     )}
-                    <StatusSelect submissionId={a.id} jobId={jobId} currentStatus={a.status} />
+                    <StatusSelect submissionId={a.id} jobId={jobId} currentStatus={a.status} candidateName={a.candidate_name} />
                   </div>
                 </div>
               </div>

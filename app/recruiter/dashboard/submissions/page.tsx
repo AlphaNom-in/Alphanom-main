@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   in_pipeline:     { bg: '#EEF3F8', color: '#5A7A9F', label: 'In Pipeline' },
+  in_review:       { bg: '#EDE9FE', color: '#7C3AED', label: 'In Review' },
   shortlisted:     { bg: '#D8F0EB', color: '#0A9E97', label: 'Shortlisted' },
   saved_for_later: { bg: '#FFF8E7', color: '#B7791F', label: 'Saved for Later' },
   hired:           { bg: '#C6F6D5', color: '#276749', label: 'Hired ✓' },

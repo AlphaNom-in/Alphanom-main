@@ -27,7 +27,10 @@ function fmtBudget(val: string): string | null {
 const WORK_MODELS  = ['On-site', 'Hybrid', 'WFH', 'Flexible']
 const NOTICE_CHIPS = ['Immediate', '15 days', '30 days', '45 days', '60 days', '90 days']
 
-export default function PostJobForm() {
+export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
+  defaultWorkModel?:   string
+  defaultNoticePeriod?: string
+}) {
   const router = useRouter()
 
   const [step,      setStep]      = useState(0)
@@ -37,10 +40,10 @@ export default function PostJobForm() {
   const [title,              setTitle]              = useState('')
   const [department,         setDepartment]         = useState('')
   const [location,           setLocation]           = useState('')
-  const [workModel,          setWorkModel]          = useState('')
+  const [workModel,          setWorkModel]          = useState(defaultWorkModel ?? '')
   const [budgetMin,          setBudgetMin]          = useState('')
   const [budgetMax,          setBudgetMax]          = useState('')
-  const [noticePeriod,       setNoticePeriod]       = useState('')
+  const [noticePeriod,       setNoticePeriod]       = useState(defaultNoticePeriod ?? '')
   const [recruiterNote,      setRecruiterNote]      = useState('')
   const [mandatoryCriteria,  setMandatoryCriteria]  = useState<string[]>([])
   const [preferredCriteria,  setPreferredCriteria]  = useState<string[]>([])

@@ -60,7 +60,8 @@ export async function submitCandidate(formData: FormData) {
     current_location: optional('current_location'),
     total_experience: optionalNum('total_experience'),
     notice_period: optional('notice_period'),
-    portfolio_url: optional('portfolio_url'),
+    linkedin_url:  raw('linkedin_url'),
+    portfolio_url: raw('portfolio_url'),
     resume_url: publicUrl,
     recruiter_note: raw('recruiter_note'),
   })

@@ -44,9 +44,9 @@ export default async function Layout({
     recruiter?.id
       ? supabase
           .from('candidate_submissions')
-          .select('job_posts(budget_max)')
+          .select('current_ctc')
           .eq('recruiter_id', recruiter.id)
-          .eq('status', 'shortlisted')
+          .eq('status', 'hired')
       : Promise.resolve({ data: [] }),
     supabase
       .from('notifications')
@@ -55,9 +55,9 @@ export default async function Layout({
       .eq('is_read', false),
   ])
 
-  // Estimate: 8.33% of annual CTC (1 month) as placement fee
+  // 4% commission on each hired candidate's actual CTC (stored in rupees)
   const earnings = (earningsResult.data ?? []).reduce((sum: number, s: any) => {
-    return sum + Math.round((s.job_posts?.budget_max ?? 0) * 0.0833)
+    return sum + Math.round((s.current_ctc ?? 0) * 0.04)
   }, 0)
 
   const unreadCount = notifResult.count ?? 0

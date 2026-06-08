@@ -60,6 +60,14 @@ export async function updateCandidateStatus(
 
     type NotifContent = { title: string; body: string }
     const STATUS_NOTIF: Record<string, NotifContent> = {
+      in_pipeline: {
+        title: 'Candidate Back in Pipeline',
+        body:  `${cand} for "${role}" has been moved back into the employer's pipeline.`,
+      },
+      in_review: {
+        title: 'Candidate Under Review',
+        body:  `${cand} for "${role}" is being actively reviewed by the employer.`,
+      },
       shortlisted: {
         title: '⭐ Candidate Shortlisted!',
         body:  `${cand} for "${role}" has been shortlisted by the employer. Great submission!`,
@@ -75,10 +83,6 @@ export async function updateCandidateStatus(
       saved_for_later: {
         title: 'Candidate Saved for Later',
         body:  `${cand} for "${role}" was saved by the employer — they may revisit.`,
-      },
-      in_pipeline: {
-        title: 'Candidate Back in Review',
-        body:  `${cand} for "${role}" has been moved back into the employer's review pipeline.`,
       },
     }
 

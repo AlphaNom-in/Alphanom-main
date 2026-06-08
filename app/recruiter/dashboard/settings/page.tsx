@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect }      from 'next/navigation'
-import JobDefaultsForm   from './JobDefaultsForm'
+import PayoutForm        from './PayoutForm'
 import SecurityForm      from './SecurityForm'
 
 function SettingCard({ icon, title, description, children }: {
@@ -25,30 +25,34 @@ function SettingCard({ icon, title, description, children }: {
 export default async function Page() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/employer/login')
+  if (!user) redirect('/recruiter/login')
 
-  const { data: employer } = await supabase
-    .from('employers')
-    .select('default_work_model, default_notice_period, default_commission_pct')
+  const { data: recruiter } = await supabase
+    .from('recruiters')
+    .select('bank_account_name, bank_account_number, bank_ifsc, upi_id, pan_number, gst_number')
     .eq('user_id', user.id)
     .single()
 
   return (
     <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      {/* Job Posting Defaults */}
+      {/* Payout & Banking */}
       <SettingCard
         icon={
           <svg fill="none" stroke="#5A7A9F" strokeWidth={1.8} viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
           </svg>
         }
-        title="Job Posting Defaults"
-        description="Pre-filled values when creating new job posts"
+        title="Payout & Banking"
+        description="Bank account, UPI, and invoicing details for commission payouts"
       >
-        <JobDefaultsForm
-          defaultWorkModel={employer?.default_work_model}
-          defaultNoticePeriod={employer?.default_notice_period}
+        <PayoutForm
+          bankAccountName={recruiter?.bank_account_name}
+          bankAccountNumber={recruiter?.bank_account_number}
+          bankIfsc={recruiter?.bank_ifsc}
+          upiId={recruiter?.upi_id}
+          panNumber={recruiter?.pan_number}
+          gstNumber={recruiter?.gst_number}
         />
       </SettingCard>
 

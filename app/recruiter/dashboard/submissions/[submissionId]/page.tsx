@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string; dot: string }> = {
   in_pipeline:     { bg: '#EEF3F8', color: '#5A7A9F', label: 'In Pipeline',     dot: '#96AFCA' },
+  in_review:       { bg: '#EDE9FE', color: '#7C3AED', label: 'In Review',        dot: '#7C3AED' },
   shortlisted:     { bg: '#D8F0EB', color: '#0A9E97', label: 'Shortlisted',      dot: '#0FB9B1' },
   saved_for_later: { bg: '#FFF8E7', color: '#B7791F', label: 'Saved for Later',  dot: '#F6AD55' },
   hired:           { bg: '#C6F6D5', color: '#276749', label: 'Hired ✓',          dot: '#48BB78' },
@@ -53,6 +54,12 @@ export default async function Page({ params }: { params: Promise<{ submissionId:
     .single()
 
   const s = STATUS_STYLE[sub.status] ?? STATUS_STYLE.in_pipeline
+
+  const { data: feedbacks } = await admin
+    .from('submission_feedback')
+    .select('id, feedback_text, status_at_time, created_at')
+    .eq('submission_id', submissionId)
+    .order('created_at', { ascending: false })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -123,6 +130,41 @@ export default async function Page({ params }: { params: Promise<{ submissionId:
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #D0DBE8', padding: '16px 20px' }}>
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Job Description</p>
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: '13px', color: '#5A7A9F', lineHeight: 1.7, margin: 0 }}>{sub.recruiter_note}</p>
+          </div>
+        )}
+
+        {/* Employer Feedback */}
+        {feedbacks && feedbacks.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #D0DBE8', padding: '16px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '12px' }}>
+              <svg width="14" height="14" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+              </svg>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 700, color: '#0A9E97', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+                Employer Feedback
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {feedbacks.map((fb: any) => {
+                const fs = STATUS_STYLE[fb.status_at_time] ?? STATUS_STYLE.in_pipeline
+                return (
+                  <div key={fb.id} style={{ background: '#F8FAFC', borderRadius: '10px', padding: '12px 14px', border: '1px solid #EEF3F8' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '99px', background: fs.bg, border: `1px solid ${fs.dot}40` }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: fs.dot, display: 'block', flexShrink: 0 }} />
+                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 700, color: fs.color }}>{fs.label}</span>
+                      </span>
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', color: '#96AFCA' }}>
+                        {new Date(fb.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '13px', color: '#032655', lineHeight: 1.65, margin: 0 }}>
+                      {fb.feedback_text}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 

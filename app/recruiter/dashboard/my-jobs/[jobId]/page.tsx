@@ -1,6 +1,11 @@
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+
+function isHTML(text: string): boolean {
+  return /<\/?(p|div|b|i|u|br|ul|ol|li|strong|em|h[1-6]|span)\b[^>]*>/i.test(text)
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -23,12 +28,33 @@ function Tag({ children }: { children: React.ReactNode }) {
 
 export default async function Page({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await params
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/recruiter/login')
+
+  const { data: recruiter } = await supabase
+    .from('recruiters').select('id').eq('user_id', user.id).single()
+  if (!recruiter) redirect('/recruiter/login')
+
   const admin = createAdminClient()
 
-  const { data: job, error } = await admin
-    .from('job_posts').select('*').eq('id', jobId).single()
+  const [{ data: job, error }, { data: hiredSubs }] = await Promise.all([
+    admin.from('job_posts').select('*').eq('id', jobId).single(),
+    admin.from('candidate_submissions')
+      .select('current_ctc')
+      .eq('job_post_id', jobId)
+      .eq('recruiter_id', recruiter.id)
+      .eq('status', 'hired'),
+  ])
 
   if (error || !job) notFound()
+
+  // 4% commission on each hired candidate's CTC (stored in rupees)
+  const totalEarned = (hiredSubs ?? []).reduce((sum, s) => sum + (s.current_ctc ? s.current_ctc * 0.04 : 0), 0)
+  const earnedLabel = totalEarned > 0
+    ? `₹${(totalEarned / 100000).toFixed(1)}L`
+    : '₹0'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -72,7 +98,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
           {[
             { label: 'Work Model',    value: job.work_model     || '—' },
             { label: 'Notice Period', value: job.notice_period  || '—' },
-            { label: 'Earning Potential', value: (job.budget_min || job.budget_max) ? `₹${((((job.budget_min ?? 0) + (job.budget_max ?? 0)) / 2) * 0.04 / 100000).toFixed(1)}L` : '—' },
+            { label: 'Total Earned', value: earnedLabel },
           ].map((s) => (
             <div key={s.label} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #D0DBE8', padding: '12px 16px' }}>
               <p style={{ fontSize: '10px', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>{s.label}</p>
@@ -101,7 +127,25 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
         {job.recruiter_note && (
           <Section title="Job Description">
-            <p style={{ fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7, margin: 0 }}>{job.recruiter_note}</p>
+            {isHTML(job.recruiter_note) ? (
+              <>
+                <div
+                  dangerouslySetInnerHTML={{ __html: job.recruiter_note }}
+                  className="jd-html"
+                  style={{ fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7 }}
+                />
+                <style>{`
+                  .jd-html b, .jd-html strong { font-weight: 700; color: #032655; }
+                  .jd-html i, .jd-html em { font-style: italic; }
+                  .jd-html u { text-decoration: underline; }
+                  .jd-html ul, .jd-html ol { margin: 6px 0; padding-left: 20px; }
+                  .jd-html li { margin: 3px 0; }
+                  .jd-html p { margin: 4px 0; }
+                `}</style>
+              </>
+            ) : (
+              <p style={{ fontSize: '14px', color: '#5A7A9F', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{job.recruiter_note}</p>
+            )}
           </Section>
         )}
 

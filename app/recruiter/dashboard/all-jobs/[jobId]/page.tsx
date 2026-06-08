@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
 function isHTML(text: string): boolean {
-  return /<\/?(b|i|u|br|ul|ol|li|strong|em)\b[^>]*>/i.test(text)
+  return /<\/?(p|div|b|i|u|br|ul|ol|li|strong|em|h[1-6]|span)\b[^>]*>/i.test(text)
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
