@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 /* ─── Types ───────────────────────────────────────────────────────────────────*/
 type NavLink = {
@@ -168,72 +169,28 @@ export default function Navbar() {
             {/* ── Logo ─────────────────────────────────────────────────── */}
             <Link
               href="/"
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}
               aria-label="AlphaNom — Home"
             >
-              {/* Teal dot */}
-              <span
-                aria-hidden="true"
-                style={{
-                  display: 'inline-block',
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  background: '#0FB9B1',
-                  marginRight: '7px',
-                  flexShrink: 0,
-                }}
+              <Image
+                src="/images/logo.png"
+                alt="AlphaNom logo"
+                width={52}
+                height={52}
+                style={{ display: 'block', flexShrink: 0 }}
+                priority
               />
-              {/* Alpha — Fraunces italic */}
               <span
                 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontStyle: 'italic',
-                  fontWeight: 400,
-                  fontSize: '1.7rem',
+                  fontFamily: 'var(--font-ui)',
+                  fontWeight: 800,
+                  fontSize: '1.4rem',
                   lineHeight: 1,
                   color: '#032655',
                   letterSpacing: '-0.02em',
                 }}
               >
-                Alpha
-              </span>
-              {/* Nom — Plus Jakarta Sans heavy */}
-              <span
-                style={{
-                  fontFamily: 'var(--font-ui)',
-                  fontWeight: 800,
-                  fontSize: '1.05rem',
-                  lineHeight: 1,
-                  color: '#032655',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase' as const,
-                  alignSelf: 'flex-end',
-                  paddingBottom: '2px',
-                  marginLeft: '1px',
-                }}
-              >
-                Nom
-              </span>
-              {/* .in badge */}
-              <span
-                className="hidden sm:inline-flex"
-                style={{
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: '0.52rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase' as const,
-                  color: '#0FB9B1',
-                  border: '1.5px solid #0FB9B1',
-                  borderRadius: '3px',
-                  padding: '3px 5px',
-                  marginLeft: '7px',
-                  alignSelf: 'center',
-                  lineHeight: 1.3,
-                }}
-              >
-                .in
+                AlphaNom
               </span>
             </Link>
 

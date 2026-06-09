@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 /* ─── Types ───────────────────────────────────────────────────────────────────*/
 type FooterLink = { label: string; href: string }
@@ -139,66 +140,41 @@ export default function Footer() {
             {/* Logo */}
             <Link
               href="/"
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '10px' }}
               aria-label="AlphaNom — Home"
             >
-              <span
-                aria-hidden="true"
+              <div
                 style={{
-                  display: 'inline-block',
-                  width: '7px', height: '7px',
-                  borderRadius: '50%',
-                  background: '#0FB9B1',
-                  marginRight: '7px',
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '10px',
+                  background: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   flexShrink: 0,
+                  padding: '5px',
                 }}
-              />
+              >
+                <Image
+                  src="/images/logo.png"
+                  alt="AlphaNom logo"
+                  width={44}
+                  height={44}
+                  style={{ display: 'block' }}
+                />
+              </div>
               <span
                 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontStyle: 'italic',
-                  fontWeight: 400,
-                  fontSize: '1.65rem',
+                  fontFamily: 'var(--font-ui)',
+                  fontWeight: 800,
+                  fontSize: '1.35rem',
                   lineHeight: 1,
                   color: '#F5F5F5',
                   letterSpacing: '-0.02em',
                 }}
               >
-                Alpha
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-ui)',
-                  fontWeight: 800,
-                  fontSize: '1rem',
-                  lineHeight: 1,
-                  color: '#F5F5F5',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase' as const,
-                  alignSelf: 'flex-end',
-                  paddingBottom: '2px',
-                  marginLeft: '1px',
-                }}
-              >
-                Nom
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: '0.5rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase' as const,
-                  color: '#0FB9B1',
-                  border: '1.5px solid #0FB9B1',
-                  borderRadius: '3px',
-                  padding: '3px 5px',
-                  marginLeft: '7px',
-                  alignSelf: 'center',
-                  lineHeight: 1.3,
-                }}
-              >
-                .in
+                AlphaNom
               </span>
             </Link>
 

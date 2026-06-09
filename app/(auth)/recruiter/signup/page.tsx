@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signUpRecruiter, verifyRecruiterSignupOtp, resendRecruiterOtp } from '@/lib/auth/recruiter'
+import { AlphaNomSpinner } from '@/components/auth/AlphaNomSpinner'
 
 const BENEFITS = [
   'Access live mandates from 200+ top companies',
@@ -212,10 +213,10 @@ function AuthHeader({ rightSlot }: { rightSlot?: React.ReactNode }) {
     <header style={{ background:'#fff', borderBottom:'1px solid #EEF3F8', position:'sticky', top:0, zIndex:100 }}>
       <div style={{ height:'2.5px', background:'linear-gradient(90deg,#032655 0%,#0FB9B1 40%,#15C7C0 60%,#032655 100%)' }}/>
       <div style={{ maxWidth:'1100px', margin:'0 auto', padding:'0 2rem', height:'60px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <Link href="/" style={{ textDecoration:'none', display:'flex', alignItems:'center' }}>
-          <span aria-hidden style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#0FB9B1', display:'inline-block', marginRight:'7px', flexShrink:0 }}/>
-          <span style={{ fontFamily:'var(--font-display)', fontStyle:'italic', fontWeight:400, fontSize:'1.55rem', color:'#032655', letterSpacing:'-0.02em', lineHeight:1 }}>Alpha</span>
-          <span style={{ fontFamily:'var(--font-ui)', fontWeight:800, fontSize:'0.95rem', color:'#032655', letterSpacing:'0.05em', textTransform:'uppercase' as const, alignSelf:'flex-end', paddingBottom:'2px', marginLeft:'1px' }}>Nom</span>
+        <Link href="/" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:'6px' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png" alt="AlphaNom logo" width={40} height={40} style={{ display:'block', flexShrink:0 }} />
+          <span style={{ fontFamily:'var(--font-ui)', fontWeight:800, fontSize:'1.25rem', color:'#032655', letterSpacing:'-0.02em', lineHeight:1 }}>AlphaNom</span>
         </Link>
         {rightSlot && <div className="ap-hd-right" style={{ display:'flex', alignItems:'center' }}>{rightSlot}</div>}
       </div>
@@ -297,7 +298,7 @@ function ErrorBox({ msg }: { msg: string }) {
 function SubmitBtn({ loading, label, bg = '#032655' }: { loading: boolean; label: string; bg?: string }) {
   return (
     <button type="submit" disabled={loading} style={{ width:'100%', padding:'0.825rem', background: loading ? '#96AFCA' : bg, color:'#fff', border:'none', borderRadius:'10px', fontFamily:'var(--font-ui)', fontSize:'0.82rem', fontWeight:700, letterSpacing:'0.04em', cursor: loading ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'7px', transition:'background 0.18s', marginTop:'0.25rem' }}>
-      {loading ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ animation:'authSpin 0.8s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Please wait…</> : label}
+      {loading ? <><AlphaNomSpinner />Please wait…</> : label}
     </button>
   )
 }

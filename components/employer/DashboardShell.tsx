@@ -134,13 +134,9 @@ export default function DashboardShell({ children, companyName, logoUrl, isProfi
           {/* Brand */}
           <div style={{ padding: '1.25rem 1.25rem 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
-                background: 'linear-gradient(135deg, #0FB9B1 0%, #0A9E97 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 3px 12px rgba(15,185,177,0.4)',
-              }}>
-                <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 900, fontSize: '0.7rem', color: '#fff', letterSpacing: '0.04em' }}>AN</span>
+              <div style={{ width: '40px', height: '40px', borderRadius: '9px', flexShrink: 0, background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/logo.png" alt="AlphaNom logo" width={32} height={32} style={{ display: 'block' }} />
               </div>
               <div>
                 <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2 }}>AlphaNom</p>
