@@ -82,6 +82,29 @@ export default async function Page() {
   return (
     <div className="rdash-page-root" style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '14px' }}>
 
+      {/* ── Verification pending banner ────────────────────────────────── */}
+      {!recruiter.is_verified && (
+        <div style={{ flexShrink: 0, background: '#F0F4FF', border: '1px solid #C7D7F4', borderRadius: '12px', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: '#E0EAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" fill="none" stroke="#3B5FCC" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#1E3A8A', margin: '0 0 3px' }}>
+              Account verification pending
+            </p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#3B5FCC', margin: 0, lineHeight: 1.5 }}>
+              Your account is under review by the AlphaNom admin team. Candidate submission will be unlocked once your account is approved.
+            </p>
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '7px', background: '#E0EAFC', border: '1px solid #C7D7F4', flexShrink: 0 }}>
+            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#F5A623' }} />
+            <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 700, color: '#3B5FCC' }}>Awaiting approval</span>
+          </div>
+        </div>
+      )}
+
       {/* ── Welcome card ─────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0, background: '#032655', borderRadius: '16px', padding: '22px 28px', position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{ position: 'absolute', right: '-40px', top: '-50px', width: '220px', height: '220px', borderRadius: '50%', background: 'rgba(15,185,177,0.09)', pointerEvents: 'none' }} />

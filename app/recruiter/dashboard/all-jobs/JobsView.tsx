@@ -51,6 +51,15 @@ function avatarColor(name: string | null) {
   return AVATARS[name.charCodeAt(0) % AVATARS.length]
 }
 
+function earningRange(min: number | null, max: number | null): string | null {
+  if (!max) return null
+  const rate = max >= 4000000 ? 0.035 : 0.03
+  function fmt(v: number) {
+    return `₹${parseFloat((v / 100000).toFixed(2))}L`
+  }
+  return min ? `${fmt(min * rate)} – ${fmt(max * rate)}` : fmt(max * rate)
+}
+
 function isHTML(text: string): boolean {
   return /<\/?(b|i|u|br|ul|ol|li|p|strong|em)\b[^>]*>/i.test(text)
 }
@@ -180,10 +189,10 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
   const selBudgetMin = formatBudget(selected?.budget_min)
   const selBudgetMax = formatBudget(selected?.budget_max)
   const hasBudget    = selBudgetMin || selBudgetMax
+  const selEstEarning  = earningRange(selected?.budget_min ?? null, selected?.budget_max ?? null)
+  const selIsHighPay   = selected?.budget_max != null && selected.budget_max >= 4000000
   const avatarBg     = avatarColor(employer?.company_name ?? null)
   const city         = companyCity(employer?.company_address ?? null)
-
-  const activeWM = sp.get('work_model') ?? ''
 
   const DATE_OPTIONS = [
     { label: 'Date Posted', value: '' },
@@ -197,7 +206,6 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
 
   function clearAll() {
     setSearch('')
-    const p = new URLSearchParams()
     startTransition(() => router.replace(pathname))
   }
 
@@ -345,6 +353,8 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
               const emp  = job.employers as any
               const bg   = avatarColor(emp?.company_name ?? null)
               const subCount = submissionCounts[job.id] ?? 0
+              const estEarning = earningRange(job.budget_min, job.budget_max)
+              const isHighPay  = job.budget_max != null && job.budget_max >= 4000000
 
               return (
                 <div
@@ -394,6 +404,17 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
                         {(bMin || bMax) && (
                           <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 700, color: '#0A9E97', background: '#D8F0EB', border: '1px solid rgba(15,185,177,0.2)', borderRadius: '4px', padding: '2px 7px' }}>
                             {bMin}{bMin && bMax ? ' – ' : ''}{bMax} PA
+                          </span>
+                        )}
+                        {estEarning && (
+                          <span style={{
+                            fontFamily: 'var(--font-ui)', fontSize: '0.6rem', fontWeight: 700,
+                            color: isHighPay ? '#B7791F' : '#5A7A9F',
+                            background: isHighPay ? '#FFF8E7' : '#EEF3F8',
+                            border: `1px solid ${isHighPay ? '#F6E05E' : '#D0DBE8'}`,
+                            borderRadius: '4px', padding: '2px 6px', whiteSpace: 'nowrap' as const,
+                          }}>
+                            💰 {estEarning}
                           </span>
                         )}
                         <SubmissionBadge count={subCount} />
@@ -483,6 +504,18 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#0A9E97', background: '#D8F0EB', border: '1px solid rgba(15,185,177,0.25)', borderRadius: '100px', padding: '4px 11px' }}>
                       <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {selBudgetMin} – {selBudgetMax} PA
+                    </span>
+                  )}
+                  {selEstEarning && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '4px',
+                      fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700,
+                      color: selIsHighPay ? '#B7791F' : '#5A7A9F',
+                      background: selIsHighPay ? '#FFF8E7' : '#EEF3F8',
+                      border: `1px solid ${selIsHighPay ? '#F6E05E' : '#D0DBE8'}`,
+                      borderRadius: '100px', padding: '4px 11px',
+                    }}>
+                      💰 {selEstEarning} Est. Earning
                     </span>
                   )}
                   {selected.notice_period && (

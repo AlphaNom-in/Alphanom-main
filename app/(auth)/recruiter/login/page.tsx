@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { loginRecruiter } from '@/lib/auth/recruiter'
+import { checkRecruiterEmailExists } from '@/lib/auth/checkEmail'
 import { AlphaNomSpinner } from '@/components/auth/AlphaNomSpinner'
 
 function ResetBanner() {
@@ -40,8 +41,18 @@ export default function RecruiterLoginPage() {
       await loginRecruiter(email, password)
       router.refresh()
       router.push('/recruiter/dashboard')
-    } catch (err: any) { setError(err.message) }
-    finally { setLoading(false) }
+    } catch (err: any) {
+      if (err.message?.toLowerCase().includes('invalid login credentials')) {
+        const exists = await checkRecruiterEmailExists(email)
+        if (!exists) {
+          setError("No account found with this email. Please create one.")
+        } else {
+          setError('Incorrect password. Please try again.')
+        }
+      } else {
+        setError(err.message)
+      }
+    } finally { setLoading(false) }
   }
 
   return (

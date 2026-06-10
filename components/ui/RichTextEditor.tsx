@@ -64,17 +64,17 @@ export default function RichTextEditor({
       <div style={{ border: '1.5px solid #D0DBE8', borderRadius: '9px', overflow: 'hidden' }}>
         {/* Toolbar */}
         <div style={{ display: 'flex', gap: '4px', padding: '7px 10px', background: '#F5F8FC', borderBottom: '1px solid #EEF3F8', alignItems: 'center' }}>
-          <button type="button" title="Bold (Ctrl+B)" onClick={() => exec('bold')} style={{ ...btnStyle, fontFamily: 'Georgia, serif', fontWeight: 700 }}>
+          <button type="button" title="Bold (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec('bold') }} style={{ ...btnStyle, fontFamily: 'Georgia, serif', fontWeight: 700 }}>
             B
           </button>
-          <button type="button" title="Italic (Ctrl+I)" onClick={() => exec('italic')} style={{ ...btnStyle, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+          <button type="button" title="Italic (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec('italic') }} style={{ ...btnStyle, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             I
           </button>
-          <button type="button" title="Underline (Ctrl+U)" onClick={() => exec('underline')} style={{ ...btnStyle, fontFamily: 'Georgia, serif', textDecoration: 'underline' }}>
+          <button type="button" title="Underline (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec('underline') }} style={{ ...btnStyle, fontFamily: 'Georgia, serif', textDecoration: 'underline' }}>
             U
           </button>
           <div style={{ width: '1px', height: '16px', background: '#D0DBE8', margin: '0 2px' }} />
-          <button type="button" title="Bullet list" onClick={() => exec('insertUnorderedList')} style={btnStyle}>
+          <button type="button" title="Bullet list" onMouseDown={(e) => { e.preventDefault(); exec('insertUnorderedList') }} style={btnStyle}>
             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.008v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.008v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
@@ -120,8 +120,9 @@ export default function RichTextEditor({
           font-size: 0.875rem;
           line-height: 1.7;
         }
-        .rte-editor ul, .rte-editor ol { margin: 4px 0; padding-left: 20px; }
-        .rte-editor li { margin: 2px 0; }
+        .rte-editor ul { margin: 4px 0; padding-left: 22px; list-style-type: disc; }
+        .rte-editor ol { margin: 4px 0; padding-left: 22px; list-style-type: decimal; }
+        .rte-editor li { margin: 2px 0; display: list-item; }
         .rte-editor b, .rte-editor strong { font-weight: 700; }
         .rte-editor i, .rte-editor em { font-style: italic; }
         .rte-editor u { text-decoration: underline; }

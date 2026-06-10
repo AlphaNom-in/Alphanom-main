@@ -55,6 +55,10 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
       setStepError('Job title is required to continue.')
       return false
     }
+    if (step === 3 && !stripHtml(recruiterNote).trim()) {
+      setStepError('Job description is required to continue.')
+      return false
+    }
     return true
   }
 
@@ -103,7 +107,7 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
       {/* ── Step indicator ─────────────────────────────────────────────── */}
       <div style={{ width: '100%', maxWidth: '560px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {STEPS.map((s, i) => (
+          {STEPS.map((_s, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
               {/* Circle */}
               <div style={{
@@ -284,7 +288,7 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
           {/* ── STEP 4: Job Description ────────────────────────────────── */}
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={lbl}>Description for Recruiters <span style={{ color: '#96AFCA', fontWeight: 400 }}>(optional)</span></label>
+              <label style={lbl}>Description for Recruiters <span style={{ color: '#DC2626' }}>*</span></label>
               <RichTextEditor
                 value={recruiterNote} onChange={setRecruiterNote}
                 placeholder="Describe the ideal candidate, responsibilities, what success looks like in this role…"

@@ -9,9 +9,53 @@ export default async function Page() {
 
   const { data: employer } = await supabase
     .from('employers')
-    .select('company_address, industry, default_work_model, default_notice_period')
+    .select('company_address, industry, default_work_model, default_notice_period, is_verified')
     .eq('user_id', user?.id)
     .single()
+
+  if (!employer?.is_verified) {
+    return (
+      <div style={{ maxWidth: '560px' }}>
+        <div style={{
+          background: '#fff',
+          borderRadius: '16px',
+          border: '1px solid #D0DBE8',
+          overflow: 'hidden',
+          boxShadow: '0 2px 16px rgba(3,38,85,0.07)',
+        }}>
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #032655, #0FB9B1)' }} />
+          <div style={{ padding: '2.5rem', textAlign: 'center' }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '14px',
+              background: '#EEF3F8', border: '1px solid #D0DBE8',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 1.25rem',
+            }}>
+              <svg fill="none" stroke="#5A7A9F" strokeWidth={1.6} viewBox="0 0 24 24" style={{ width: '26px', height: '26px' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.25rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>
+              Verification Pending
+            </h2>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.875rem', color: '#5A7A9F', lineHeight: 1.65, maxWidth: '380px', margin: '0 auto 1.75rem' }}>
+              Your account is under review by the AlphaNom admin team. You will be able to post jobs once your account has been approved.
+            </p>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              padding: '10px 18px', borderRadius: '8px',
+              background: '#F5F8FC', border: '1px solid #D0DBE8',
+            }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F5A623', flexShrink: 0 }} />
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 600, color: '#5A7A9F' }}>
+                Awaiting admin approval
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const isComplete = !!(employer?.company_address?.trim() && employer?.industry?.trim())
 

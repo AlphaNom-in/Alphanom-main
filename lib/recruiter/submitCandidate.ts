@@ -15,11 +15,17 @@ export async function submitCandidate(formData: FormData) {
 
   const { data: recruiter } = await supabase
     .from('recruiters')
-    .select('id')
+    .select('id, is_verified, years_of_experience, linkedin_url')
     .eq('user_id', user.id)
     .single()
 
   if (!recruiter) throw new Error('Recruiter profile not found')
+  if (!recruiter.is_verified) throw new Error('Your account is pending verification. Please wait for admin approval before submitting candidates.')
+
+  const profileIncomplete =
+    (!recruiter.years_of_experience && recruiter.years_of_experience !== 0) ||
+    !recruiter.linkedin_url
+  if (profileIncomplete) throw new Error('Please complete your recruiter profile before submitting candidates.')
 
   const resumeFile = formData.get('resume') as File
   if (!resumeFile || resumeFile.size === 0)

@@ -24,8 +24,9 @@ export async function createJobAction(jobData: {
   if (!user) throw new Error('Not authenticated')
 
   const { data: employer } = await supabase
-    .from('employers').select('id, company_name').eq('user_id', user.id).single()
+    .from('employers').select('id, company_name, is_verified').eq('user_id', user.id).single()
   if (!employer) throw new Error('Employer not found')
+  if (!employer.is_verified) throw new Error('Account not verified. Please wait for admin approval before posting jobs.')
 
   const payload = {
     ...jobData,

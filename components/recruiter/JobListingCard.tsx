@@ -24,9 +24,13 @@ function toLPA(annual: number | null): string | null {
   return Number.isInteger(lpa) ? `${lpa}` : lpa.toFixed(1)
 }
 
-function earningPotential(budgetMax: number | null): string | null {
-  if (!budgetMax) return null
-  return budgetMax >= 4000000 ? '3.5%' : '3%'
+function earningRange(min: number | null, max: number | null): string | null {
+  if (!max) return null
+  const rate = max >= 4000000 ? 0.035 : 0.03
+  function fmt(v: number) {
+    return `₹${parseFloat((v / 100000).toFixed(2))}L`
+  }
+  return min ? `${fmt(min * rate)} – ${fmt(max * rate)}` : fmt(max * rate)
 }
 
 export default function JobListingCard({
@@ -35,7 +39,7 @@ export default function JobListingCard({
 }: Props) {
   const minLPA = toLPA(budget_min)
   const maxLPA = toLPA(budget_max)
-  const earning = earningPotential(budget_max)
+  const earning = earningRange(budget_min, budget_max)
   const isHighPay = budget_max != null && budget_max >= 4000000
 
   return (
@@ -96,7 +100,7 @@ export default function JobListingCard({
               🕐 {notice_period}
             </span>
           )}
-          {/* Earning potential */}
+          {/* Estimated earning range */}
           {earning && (
             <span style={{
               fontSize: '11px', fontWeight: 700,
@@ -105,7 +109,7 @@ export default function JobListingCard({
               padding: '3px 8px', borderRadius: '5px',
               border: `1px solid ${isHighPay ? '#F6E05E' : '#D0DBE8'}`,
             }}>
-              💰 {earning} Earning Potential
+              💰 {earning} Est. Earning
             </span>
           )}
         </div>
