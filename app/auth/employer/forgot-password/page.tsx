@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { sendPasswordResetOtp, verifyPasswordResetOtp, resetPasswordAction } from '@/lib/email/otp'
+import { validatePassword } from '@/lib/validations/password'
 
 type Step = 'email' | 'otp' | 'password'
 
@@ -43,7 +44,8 @@ export default function EmployerForgotPasswordPage() {
 
   async function handlePassword(e: React.FormEvent) {
     e.preventDefault()
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+    const pwdErr = validatePassword(password)
+    if (pwdErr) { setError(pwdErr); return }
     if (password !== confirm) { setError('Passwords do not match.'); return }
     setError(''); setLoading(true)
     try {

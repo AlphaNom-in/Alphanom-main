@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect }      from 'next/navigation'
 import Link              from 'next/link'
 import CandidatesFilter  from './CandidatesFilter'
+import ContactDropdown   from '@/components/employer/ContactDropdown'
 
 const STATUS_TABS = [
   { key: 'all',            label: 'All' },
@@ -68,8 +69,9 @@ export default async function Page({
   // Build query
   let query = supabase
     .from('candidate_submissions')
-    .select('id, candidate_name, email, status, submitted_at, job_post_id, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url')
+    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, job_post_id, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url')
     .in('job_post_id', jobIds)
+    .or('consent_status.eq.consented,consent_status.is.null')
     .order('submitted_at', { ascending: false })
 
   const activeStatus = statusParam && statusParam !== 'all' ? statusParam : null
@@ -90,6 +92,7 @@ export default async function Page({
         .from('candidate_submissions')
         .select('status')
         .in('job_post_id', jobIds)
+        .or('consent_status.eq.consented,consent_status.is.null')
         .then(r => r)
     : { data: all }
 
@@ -195,7 +198,6 @@ export default async function Page({
                   background: '#fff', borderRadius: '16px',
                   border: '1px solid #D0DBE8',
                   borderLeft: `4px solid ${st.accent}`,
-                  overflow: 'hidden',
                   boxShadow: '0 1px 4px rgba(3,38,85,0.06)',
                 }}
               >
@@ -213,11 +215,16 @@ export default async function Page({
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '0.95rem', fontWeight: 800, color: '#032655', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+                    <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '0.95rem', fontWeight: 800, color: '#032655', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
                       {c.candidate_name}
                     </h3>
-                    {/* Job title chip */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    {(c.current_job_title || c.current_company) && (
+                      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600, color: '#5A7A9F', margin: '0 0 5px' }}>
+                        {[c.current_job_title, c.current_company].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                    {/* Job pill + contact links */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <Link
                         href={`/employer/dashboard/jobs/${c.job_post_id}/applicants`}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 600, color: '#0FB9B1', textDecoration: 'none', background: '#F0FBF9', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(15,185,177,0.25)' }}
@@ -225,12 +232,7 @@ export default async function Page({
                         <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                         {jobTitle}
                       </Link>
-                      {c.email && (
-                        <a href={`mailto:${c.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#96AFCA', textDecoration: 'none' }}>
-                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                          {c.email}
-                        </a>
-                      )}
+                      <ContactDropdown email={c.email} phone={c.phone} />
                       {c.linkedin_url && (
                         <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#0A66C2', textDecoration: 'none', fontWeight: 600 }}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -292,7 +294,7 @@ export default async function Page({
                 )}
 
                 {/* Footer */}
-                <div style={{ padding: '10px 22px', background: '#FAFCFE', borderTop: '1px solid #EEF3F8', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <div style={{ padding: '10px 22px', background: '#FAFCFE', borderTop: '1px solid #EEF3F8', borderRadius: '0 0 16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#96AFCA' }}>
                     Submitted {new Date(c.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>

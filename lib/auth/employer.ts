@@ -1,5 +1,11 @@
 import { createClient } from '@/lib/supabase/client'
-import { sendSignupOtp, verifySignupOtp, checkEmailRegistered } from '@/lib/email/otp'
+import {
+  sendSignupOtp,
+  verifySignupOtp,
+  checkEmailRegistered,
+  checkContactRegistered,
+  checkUsernameRegistered,
+} from '@/lib/email/otp'
 
 // TODO: remove gmail.com from this list before production
 const FREE_DOMAINS = new Set([
@@ -33,9 +39,16 @@ export async function signUpEmployer({
   password: string
   contact_primary: string
 }) {
-  // Check if email is already registered before sending OTP
-  const exists = await checkEmailRegistered(email, 'employer')
-  if (exists) throw new Error('An account with this email already exists. Please sign in instead.')
+  // Check all unique fields in parallel before sending OTP — fail fast with clear messages
+  const [emailExists, contactExists, usernameExists] = await Promise.all([
+    checkEmailRegistered(email, 'employer'),
+    checkContactRegistered(contact_primary),
+    checkUsernameRegistered(username),
+  ])
+
+  if (emailExists) throw new Error('An account with this email already exists. Please sign in instead.')
+  if (contactExists) throw new Error('This phone number is already registered to another employer account. Please use a different number.')
+  if (usernameExists) throw new Error('This username is already taken. Please choose a different one.')
 
   // Store form data in localStorage — retrieved after OTP verification
   localStorage.setItem('__employer_signup__', JSON.stringify({
@@ -66,6 +79,7 @@ export async function verifyEmployerSignupOtp(email: string, otp: string) {
 
   const supabase = createClient()
   let userId: string
+  let isOrphanedUser = false
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -74,11 +88,35 @@ export async function verifyEmployerSignupOtp(email: string, otp: string) {
   })
 
   if (error) {
-    // Orphaned auth user from a previous abandoned signup — sign in to get the user id
     if (error.message.toLowerCase().includes('already registered')) {
+      // Auth user exists — could be an orphaned user from a previous failed signup attempt.
+      // Sign in to determine who they are.
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) throw new Error('This email is already in use. Please sign in or use a different email.')
+
+      if (signInError) {
+        // Password mismatch — they used a different password during first signup attempt
+        throw new Error(
+          'An account for this email was partially created earlier. Please use the same password you entered during your first signup attempt, or contact support.'
+        )
+      }
+
+      // Check whether an employer profile already exists (successful signup before)
+      const alreadyEmployer = await checkEmailRegistered(email, 'employer')
+      if (alreadyEmployer) {
+        await supabase.auth.signOut()
+        throw new Error('This email is already registered as an employer account. Please sign in instead.')
+      }
+
+      // Check whether a recruiter profile exists (wrong role)
+      const alreadyRecruiter = await checkEmailRegistered(email, 'recruiter')
+      if (alreadyRecruiter) {
+        await supabase.auth.signOut()
+        throw new Error('This email is already registered as a recruiter account and cannot be used for employer signup.')
+      }
+
+      // Genuine orphaned auth user — no profile for either role, safe to continue
       userId = signInData.user.id
+      isOrphanedUser = true
     } else {
       throw error
     }
@@ -95,9 +133,35 @@ export async function verifyEmployerSignupOtp(email: string, otp: string) {
     email,
     contact_primary,
   })
-  if (profileError) throw profileError
+
+  if (profileError) {
+    // Sign out to avoid leaving the user in a broken signed-in-but-no-profile state
+    await supabase.auth.signOut()
+
+    // Translate DB constraint errors into user-friendly messages
+    if (profileError.code === '23505') {
+      const detail = (profileError.details ?? profileError.message).toLowerCase()
+      if (detail.includes('contact_primary') || detail.includes('contact')) {
+        throw new Error('This phone number is already registered. Please use a different contact number.')
+      }
+      if (detail.includes('username')) {
+        throw new Error('This username is already taken. Please choose a different username.')
+      }
+      if (detail.includes('email')) {
+        throw new Error('This email is already registered. Please sign in instead.')
+      }
+      throw new Error('An account with one of these details already exists. Please check your information and try again.')
+    }
+
+    throw new Error('Failed to create your profile. Please try again or contact support.')
+  }
 
   localStorage.removeItem('__employer_signup__')
+
+  if (isOrphanedUser) {
+    // Already signed in via the signInWithPassword above — session is live, nothing more needed
+    return
+  }
 
   // Explicitly sign in so session exists regardless of Supabase email confirmation setting
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
@@ -114,5 +178,13 @@ export async function loginEmployer(email: string, password: string) {
   const supabase = createClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error
+
+  // Guard against recruiter accounts (or accounts with no role) trying to access employer flow
+  const role = data.user?.user_metadata?.role
+  if (role === 'recruiter') {
+    await supabase.auth.signOut()
+    throw new Error('This email is registered for a recruiter account. Please use the recruiter login instead.')
+  }
+
   return data.user
 }

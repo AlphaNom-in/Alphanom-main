@@ -6,15 +6,43 @@ import Link from 'next/link'
 import { loginEmployer } from '@/lib/auth/employer'
 import { AlphaNomSpinner } from '@/components/auth/AlphaNomSpinner'
 
-function ResetBanner() {
+function StatusBanner() {
   const searchParams = useSearchParams()
-  if (searchParams.get('reset') !== '1') return null
-  return (
-    <div style={{ background:'#D8F0EB', border:'1px solid #0FB9B1', borderRadius:'10px', padding:'0.7rem 0.875rem', marginBottom:'0.75rem', display:'flex', alignItems:'center', gap:'8px' }}>
-      <svg width="15" height="15" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink:0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.78rem', color:'#0A9E97', margin:0, fontWeight:600 }}>Password updated successfully. Sign in with your new password.</p>
-    </div>
-  )
+  const reset    = searchParams.get('reset')
+  const errParam = searchParams.get('error')
+
+  if (reset === '1') {
+    return (
+      <div style={{ background:'#D8F0EB', border:'1px solid #0FB9B1', borderRadius:'10px', padding:'0.7rem 0.875rem', marginBottom:'0.75rem', display:'flex', alignItems:'center', gap:'8px' }}>
+        <svg width="15" height="15" fill="none" stroke="#0A9E97" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink:0 }}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.78rem', color:'#0A9E97', margin:0, fontWeight:600 }}>Password updated successfully. Sign in with your new password.</p>
+      </div>
+    )
+  }
+
+  if (errParam === 'wrong_role') {
+    return (
+      <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:'10px', padding:'0.7rem 0.875rem', marginBottom:'0.75rem', display:'flex', alignItems:'flex-start', gap:'8px' }}>
+        <svg width="15" height="15" fill="none" stroke="#DC2626" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink:0, marginTop:'1px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+        <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.78rem', color:'#DC2626', margin:0, lineHeight:1.5 }}>
+          This email is registered as a recruiter account. Please use the <a href="/recruiter/login" style={{ fontWeight:700, color:'#DC2626' }}>recruiter login</a> instead.
+        </p>
+      </div>
+    )
+  }
+
+  if (errParam === 'no_profile') {
+    return (
+      <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:'10px', padding:'0.7rem 0.875rem', marginBottom:'0.75rem', display:'flex', alignItems:'flex-start', gap:'8px' }}>
+        <svg width="15" height="15" fill="none" stroke="#DC2626" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink:0, marginTop:'1px' }}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+        <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.78rem', color:'#DC2626', margin:0, lineHeight:1.5 }}>
+          Your account setup is incomplete. Please <a href="/employer/signup" style={{ fontWeight:700, color:'#DC2626' }}>sign up again</a> with a different email, or contact support if you believe this is an error.
+        </p>
+      </div>
+    )
+  }
+
+  return null
 }
 
 const BENEFITS = [
@@ -91,7 +119,7 @@ export default function EmployerLoginPage() {
               <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.82rem', color:'#5A7A9F', margin:0 }}>Welcome back to your employer account</p>
             </div>
 
-            <Suspense fallback={null}><ResetBanner /></Suspense>
+            <Suspense fallback={null}><StatusBanner /></Suspense>
 
             {error && <ErrorBox msg={error} />}
 

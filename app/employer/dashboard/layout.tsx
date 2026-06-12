@@ -19,8 +19,9 @@ export default async function Layout({
     redirect('/employer/login')
   }
 
-  if (user.user_metadata.role !== 'employer') {
-    redirect('/')
+  // Recruiter account (or no role) trying to access employer dashboard
+  if (user.user_metadata?.role === 'recruiter') {
+    redirect('/employer/login?error=wrong_role')
   }
 
   const [employerResult, notifResult] = await Promise.all([
@@ -37,6 +38,11 @@ export default async function Layout({
   ])
 
   const employer = employerResult.data
+
+  // Auth user exists but no employer profile — incomplete signup
+  if (!employer) {
+    redirect('/employer/login?error=no_profile')
+  }
 
   const isProfileComplete = !!(
     employer?.company_address?.trim() &&

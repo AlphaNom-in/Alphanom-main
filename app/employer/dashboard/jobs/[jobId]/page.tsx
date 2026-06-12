@@ -2,11 +2,17 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { closeJob } from '@/lib/employer/closeJob'
+import { toggleJobPause } from '@/lib/employer/pauseJob'
 
 async function handleClose(jobId: string) {
   'use server'
   await closeJob(jobId)
   redirect('/employer/dashboard/jobs')
+}
+
+async function handlePause(jobId: string, currentStatus: string) {
+  'use server'
+  await toggleJobPause(jobId, currentStatus)
 }
 
 /* Budget handles both old (LPA int) and new (rupees) storage formats */
@@ -89,12 +95,13 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
     { count: shortlisted },
     { count: hired },
   ] = await Promise.all([
-    supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId),
-    supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId).eq('status', 'shortlisted'),
-    supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId).eq('status', 'hired'),
+    supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId).or('consent_status.eq.consented,consent_status.is.null'),
+    supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId).eq('status', 'shortlisted').or('consent_status.eq.consented,consent_status.is.null'),
+    supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId).eq('status', 'hired').or('consent_status.eq.consented,consent_status.is.null'),
   ])
 
   const isClosed   = job.status === 'closed'
+  const isPaused   = job.status === 'paused'
   const budgetMin  = formatBudget(job.budget_min)
   const budgetMax  = formatBudget(job.budget_max)
   const hasBudget  = budgetMin || budgetMax
@@ -122,7 +129,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
         {/* ── Header card ───────────────────────────────────────────────── */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #D0DBE8', overflow: 'hidden', flexShrink: 0 }}>
           {/* Top accent bar */}
-          <div style={{ height: '3px', background: isClosed ? '#EEF3F8' : 'linear-gradient(90deg, #032655, #0FB9B1)' }} />
+          <div style={{ height: '3px', background: (isClosed || isPaused) ? '#EEF3F8' : 'linear-gradient(90deg, #032655, #0FB9B1)' }} />
 
           <div style={{ padding: '20px 24px' }}>
             {/* Row 1 — company + status + actions */}
@@ -133,8 +140,16 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                     {employer.company_name}
                   </span>
                 )}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontFamily: 'var(--font-ui)', fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: isClosed ? '#5A7A9F' : '#0A9E97', background: isClosed ? '#EEF3F8' : '#D8F0EB', border: `1px solid ${isClosed ? '#D0DBE8' : 'rgba(15,185,177,0.3)'}`, borderRadius: '6px', padding: '3px 9px' }}>
-                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isClosed ? '#96AFCA' : '#0FB9B1' }} />
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  fontFamily: 'var(--font-ui)', fontSize: '0.58rem', fontWeight: 800,
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                  color: isClosed ? '#5A7A9F' : isPaused ? '#B7791F' : '#0A9E97',
+                  background: isClosed ? '#EEF3F8' : isPaused ? '#FFF8E7' : '#D8F0EB',
+                  border: `1px solid ${isClosed ? '#D0DBE8' : isPaused ? '#F6E05E' : 'rgba(15,185,177,0.3)'}`,
+                  borderRadius: '6px', padding: '3px 9px',
+                }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: isClosed ? '#96AFCA' : isPaused ? '#D69E2E' : '#0FB9B1' }} />
                   {job.status ?? 'active'}
                 </span>
               </div>
@@ -152,6 +167,23 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                     <span style={{ background: '#0FB9B1', color: '#fff', borderRadius: '10px', fontSize: '0.6rem', fontWeight: 800, padding: '1px 7px' }}>{totalApplicants}</span>
                   )}
                 </Link>
+                {!isClosed && (
+                  <form action={handlePause.bind(null, jobId, job.status)}>
+                    <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', background: isPaused ? '#D8F0EB' : '#FFF8E7', color: isPaused ? '#0A9E97' : '#B7791F', border: `1px solid ${isPaused ? 'rgba(15,185,177,0.35)' : '#F6E05E'}`, fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
+                      {isPaused ? (
+                        <>
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></svg>
+                          Resume Job
+                        </>
+                      ) : (
+                        <>
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" /></svg>
+                          Pause Job
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
                 {!isClosed && (
                   <form action={handleClose.bind(null, jobId)}>
                     <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', background: '#FFF5F5', color: '#E53E3E', border: '1px solid #FEB2B2', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>

@@ -15,7 +15,7 @@ export default async function Page({
   let query = admin
     .from('job_posts')
     .select('*, employers(company_name, logo_url, industry, company_address, is_verified, company_overview, company_website, company_size, founded_year)')
-    .eq('status', 'active')
+    .in('status', ['active', 'paused'])
 
   if (params.search)
     query = query.or(`title.ilike.%${params.search}%,department.ilike.%${params.search}%`)

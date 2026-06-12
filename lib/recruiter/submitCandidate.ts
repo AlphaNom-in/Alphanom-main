@@ -1,21 +1,20 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath }    from 'next/cache'
+import { sendBrevoEmail }    from '@/lib/email/brevo'
+import { consentEmailHtml }  from '@/lib/email/templates'
 
 export async function submitCandidate(formData: FormData) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
   const { data: recruiter } = await supabase
     .from('recruiters')
-    .select('id, is_verified, years_of_experience, linkedin_url')
+    .select('id, full_name, is_verified, years_of_experience, linkedin_url')
     .eq('user_id', user.id)
     .single()
 
@@ -28,88 +27,154 @@ export async function submitCandidate(formData: FormData) {
   if (profileIncomplete) throw new Error('Please complete your recruiter profile before submitting candidates.')
 
   const resumeFile = formData.get('resume') as File
-  if (!resumeFile || resumeFile.size === 0)
-    throw new Error('Resume is required')
+  if (!resumeFile || resumeFile.size === 0) throw new Error('Resume is required')
 
-  const admin = createAdminClient()
-
-  const ext = resumeFile.name.split('.').pop()
+  const admin    = createAdminClient()
+  const ext      = resumeFile.name.split('.').pop()
   const filePath = `${recruiter.id}/${Date.now()}.${ext}`
 
   const { error: uploadError } = await admin.storage
     .from('candidate-resumes')
     .upload(filePath, resumeFile)
-
   if (uploadError) throw new Error(`Resume upload failed: ${uploadError.message}`)
 
-  const {
-    data: { publicUrl },
-  } = admin.storage.from('candidate-resumes').getPublicUrl(filePath)
+  const { data: { publicUrl } } = admin.storage.from('candidate-resumes').getPublicUrl(filePath)
 
-  const raw = (key: string) => formData.get(key) as string
-  const optional = (key: string) => raw(key) || null
-  const optionalNum = (key: string) => {
-    const v = raw(key)
-    return v ? Number(v) : null
-  }
+  const raw       = (key: string) => formData.get(key) as string
+  const optional  = (key: string) => raw(key) || null
+  const optNum    = (key: string) => { const v = raw(key); return v ? Number(v) : null }
 
-  const jobPostId = raw('job_post_id')
-  // current_ctc is entered in LPA — store as rupees so employer view (÷100000) is correct
-  const ctcLPA = optionalNum('current_ctc')
+  const jobPostId      = raw('job_post_id')
+  const ctcLPA         = optNum('current_ctc')
+  const expectedCtcLPA = optNum('expected_ctc')
 
-  const { error } = await supabase.from('candidate_submissions').insert({
-    job_post_id: jobPostId,
-    recruiter_id: recruiter.id,
-    candidate_name: raw('candidate_name'),
-    email: raw('email'),
-    current_ctc: ctcLPA != null ? Math.round(ctcLPA * 100000) : null,
-    current_location: optional('current_location'),
-    total_experience: optionalNum('total_experience'),
-    notice_period: optional('notice_period'),
-    linkedin_url:  raw('linkedin_url'),
-    portfolio_url: raw('portfolio_url'),
-    resume_url: publicUrl,
-    recruiter_note: raw('recruiter_note'),
-  })
+  // Generate consent token (48 h expiry)
+  const consentToken  = crypto.randomUUID()
+  const consentExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+
+  const { data: submission, error } = await supabase
+    .from('candidate_submissions')
+    .insert({
+      job_post_id:       jobPostId,
+      recruiter_id:      recruiter.id,
+      candidate_name:    raw('candidate_name'),
+      email:             raw('email'),
+      phone:             raw('phone'),
+      current_job_title: raw('current_job_title'),
+      current_company:   raw('current_company'),
+      current_ctc:       ctcLPA         != null ? Math.round(ctcLPA         * 100000) : null,
+      expected_ctc:      expectedCtcLPA != null ? Math.round(expectedCtcLPA * 100000) : null,
+      current_location:  optional('current_location'),
+      total_experience:  optNum('total_experience'),
+      notice_period:     raw('notice_period'),
+      linkedin_url:      raw('linkedin_url'),
+      portfolio_url:     raw('portfolio_url'),
+      resume_url:        publicUrl,
+      recruiter_note:    raw('fit_reason'),
+      consent_status:              'pending_consent',
+      consent_token:               consentToken,
+      consent_token_expires_at:    consentExpiry,
+    })
+    .select('id')
+    .single()
 
   if (error) throw error
 
-  // Invalidate employer-side pages so the new submission appears immediately
-  revalidatePath(`/employer/dashboard/jobs/${jobPostId}/applicants`)
-  revalidatePath(`/employer/dashboard/jobs/${jobPostId}`)
-  revalidatePath('/employer/dashboard/jobs')
-  revalidatePath('/employer/dashboard')
-  // Invalidate recruiter's own submission view
+  // Fetch job + company for the email
+  const { data: jobPost } = await admin
+    .from('job_posts')
+    .select('title, employers(company_name)')
+    .eq('id', jobPostId)
+    .single()
+
+  const jobTitle    = jobPost?.title ?? 'the position'
+  const companyName = (jobPost?.employers as any)?.company_name ?? 'the company'
+  const recruiterName   = recruiter.full_name ?? user.email?.split('@')[0] ?? 'Your Recruiter'
+  const candidateName   = raw('candidate_name')
+  const candidateEmail  = raw('email')
+  const candidateFirst  = candidateName.split(' ')[0]
+
+  const base       = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const confirmUrl = `${base}/consent/${consentToken}/confirm`
+  const withdrawUrl= `${base}/consent/${consentToken}?withdraw=1`
+
+  // Send consent email — await so it actually sends; swallow errors so submission still succeeds
+  try {
+    await sendBrevoEmail({
+      to:       candidateEmail,
+      toName:   candidateName,
+      subject:  `Action required: Confirm your application — ${jobTitle} at ${companyName}`,
+      html:     consentEmailHtml({ candidateFirstName: candidateFirst, recruiterName, jobTitle, companyName, confirmUrl, withdrawUrl }),
+      fromName: recruiterName,
+    })
+  } catch (err) {
+    console.error('[Consent email send failed]', err)
+  }
+
+  revalidatePath('/recruiter/dashboard/submissions')
   revalidatePath('/recruiter/dashboard')
 
-  // In-app notification → employer who owns this job (non-blocking)
-  ;(async () => {
-    const { data: jobPost } = await admin
-      .from('job_posts')
-      .select('title, employer_id')
-      .eq('id', jobPostId)
-      .single()
+  return { submissionId: submission.id, candidateEmail }
+}
 
-    if (!jobPost?.employer_id) return
+// Resend consent email for an expired / pending submission
+export async function resendConsentEmail(submissionId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
 
-    const { data: employer } = await admin
-      .from('employers')
-      .select('user_id')
-      .eq('id', jobPost.employer_id)
-      .single()
+  const { data: recruiter } = await supabase
+    .from('recruiters')
+    .select('id, full_name')
+    .eq('user_id', user.id)
+    .single()
+  if (!recruiter) throw new Error('Not found')
 
-    if (!employer?.user_id) return
+  const admin = createAdminClient()
 
-    const candidateName = raw('candidate_name')
+  const { data: sub } = await admin
+    .from('candidate_submissions')
+    .select('id, candidate_name, email, consent_status, job_post_id, recruiter_id')
+    .eq('id', submissionId)
+    .eq('recruiter_id', recruiter.id)
+    .single()
 
-    await admin.from('notifications').insert({
-      user_id: employer.user_id,
-      type:    'new_candidate',
-      title:   `New candidate for "${jobPost.title}"`,
-      body:    `${candidateName} was submitted for your opening. Review their profile and decide on the next steps.`,
-      link:    `/employer/dashboard/jobs/${jobPostId}/applicants`,
-    })
-  })().catch(err => console.error('[Employer notification]', err))
+  if (!sub) throw new Error('Submission not found')
+  if (sub.consent_status !== 'pending_consent') throw new Error('Cannot resend — submission is no longer pending.')
 
-  return true
+  const newToken  = crypto.randomUUID()
+  const newExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+
+  await admin
+    .from('candidate_submissions')
+    .update({ consent_token: newToken, consent_token_expires_at: newExpiry })
+    .eq('id', submissionId)
+
+  const { data: jobPost } = await admin
+    .from('job_posts')
+    .select('title, employers(company_name)')
+    .eq('id', sub.job_post_id)
+    .single()
+
+  const jobTitle    = jobPost?.title ?? 'the position'
+  const companyName = (jobPost?.employers as any)?.company_name ?? 'the company'
+  const recruiterName   = recruiter.full_name ?? user.email?.split('@')[0] ?? 'Your Recruiter'
+  const base        = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+
+  await sendBrevoEmail({
+    to:       sub.email,
+    toName:   sub.candidate_name,
+    subject:  `Reminder: Your application — ${jobTitle} at ${companyName}`,
+    html:     consentEmailHtml({
+      candidateFirstName: sub.candidate_name.split(' ')[0],
+      recruiterName,
+      jobTitle,
+      companyName,
+      confirmUrl:  `${base}/consent/${newToken}/confirm`,
+      withdrawUrl: `${base}/consent/${newToken}?withdraw=1`,
+    }),
+    fromName: recruiterName,
+  })
+
+  revalidatePath('/recruiter/dashboard/submissions')
 }

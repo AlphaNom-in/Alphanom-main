@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { validatePassword } from '@/lib/validations/password'
 
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 13px', borderRadius: '9px',
@@ -31,7 +32,8 @@ export default function SecurityForm({ userEmail }: { userEmail: string }) {
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault()
     setPwdErr(''); setPwdSaved(false)
-    if (newPwd.length < 8) { setPwdErr('Password must be at least 8 characters.'); return }
+    const pwdErr = validatePassword(newPwd)
+    if (pwdErr) { setPwdErr(pwdErr); return }
     if (newPwd !== confirmPwd) { setPwdErr('Passwords do not match.'); return }
     setPwdPending(true)
     const { error } = await supabase.auth.updateUser({ password: newPwd })

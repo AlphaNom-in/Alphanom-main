@@ -15,6 +15,18 @@ export async function checkEmailRegistered(
   return !!data
 }
 
+export async function checkContactRegistered(contact: string): Promise<boolean> {
+  const admin = createAdminClient()
+  const { data } = await admin.from('employers').select('id').eq('contact_primary', contact).maybeSingle()
+  return !!data
+}
+
+export async function checkUsernameRegistered(username: string): Promise<boolean> {
+  const admin = createAdminClient()
+  const { data } = await admin.from('employers').select('id').eq('username', username).maybeSingle()
+  return !!data
+}
+
 function generateOtp(): string {
   return String(Math.floor(100000 + Math.random() * 900000))
 }
@@ -117,6 +129,60 @@ export async function resetPasswordAction(
   if (!data) throw new Error('Account not found.')
 
   const { error } = await admin.auth.admin.updateUserById(data.user_id, { password: newPassword })
+  if (error) throw error
+}
+
+export async function sendChangePasswordOtp(email: string): Promise<void> {
+  const admin   = createAdminClient()
+  const purpose = 'employer_change_password'
+
+  const { data: profile } = await admin
+    .from('employers')
+    .select('company_name')
+    .eq('email', email)
+    .maybeSingle()
+
+  const otp     = generateOtp()
+  const hash    = hashOtp(otp)
+  const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+  const name    = profile?.company_name ?? email
+
+  await admin.from('email_otps').delete().eq('email', email).eq('purpose', purpose)
+  const { error } = await admin.from('email_otps').insert({ email, otp_hash: hash, purpose, expires_at: expires })
+  if (error) throw new Error('Failed to create verification code.')
+
+  await sendBrevoEmail({
+    to: email,
+    toName: name,
+    subject: 'Confirm your AlphaNom password change',
+    html: otpEmailHtml(otp, name, 'employer', 'change_password'),
+  })
+}
+
+export async function verifyChangePasswordOtp(
+  email: string,
+  otp: string,
+  newPassword: string,
+): Promise<void> {
+  const hash    = hashOtp(otp)
+  const purpose = 'employer_change_password'
+  const admin   = createAdminClient()
+
+  const { data } = await admin
+    .from('email_otps')
+    .select('id, expires_at, used')
+    .eq('email', email).eq('otp_hash', hash).eq('purpose', purpose).eq('used', false)
+    .single()
+
+  if (!data) throw new Error('Invalid code. Please check and try again.')
+  if (new Date(data.expires_at) < new Date()) throw new Error('Code expired. Please request a new one.')
+
+  await admin.from('email_otps').update({ used: true }).eq('id', data.id)
+
+  const { data: employer } = await admin.from('employers').select('user_id').eq('email', email).single()
+  if (!employer) throw new Error('Account not found.')
+
+  const { error } = await admin.auth.admin.updateUserById(employer.user_id, { password: newPassword })
   if (error) throw error
 }
 

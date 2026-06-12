@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signUpRecruiter, verifyRecruiterSignupOtp, resendRecruiterOtp } from '@/lib/auth/recruiter'
 import { AlphaNomSpinner } from '@/components/auth/AlphaNomSpinner'
+import { validatePassword } from '@/lib/validations/password'
 
 const BENEFITS = [
   'Access live mandates from 200+ top companies',
@@ -39,6 +40,8 @@ export default function RecruiterSignupPage() {
       setError('Please read and agree to the Terms & Conditions to continue.')
       return
     }
+    const pwdErr = validatePassword(password)
+    if (pwdErr) { setError(pwdErr); return }
     try {
       setLoading(true)
       const result = await signUpRecruiter({ full_name: fullName, email, password, contact_primary: contactPrimary })
@@ -119,9 +122,10 @@ export default function RecruiterSignupPage() {
                   </Field>
                   <Field label="Password">
                     <div style={{ position:'relative' }}>
-                      <input className="auth-input" type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a strong password" required autoComplete="new-password" style={{ paddingRight:'56px' }}/>
+                      <input className="auth-input" type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" required autoComplete="new-password" style={{ paddingRight:'56px' }}/>
                       <button type="button" onClick={() => setShowPass(v => !v)} style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', fontFamily:'var(--font-ui)', fontSize:'0.72rem', fontWeight:700, color:'#5A7A9F', cursor:'pointer', padding:0 }}>{showPass ? 'Hide' : 'Show'}</button>
                     </div>
+                    <p style={{ fontFamily:'var(--font-ui)', fontSize:'0.65rem', color:'#96AFCA', margin:'4px 0 0' }}>Letters, numbers and symbols only — no spaces</p>
                   </Field>
                   <Field label="Primary Contact Number">
                     <input className="auth-input" type="tel" inputMode="numeric" maxLength={10} value={contactPrimary} onChange={e => setContactPrimary(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" required/>

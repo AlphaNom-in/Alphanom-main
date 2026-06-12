@@ -335,7 +335,7 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
         {/* Job count */}
         <div style={{ padding: '8px 14px', flexShrink: 0 }}>
           <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', fontWeight: 600, color: '#96AFCA' }}>
-            {displayJobs.length} active role{displayJobs.length !== 1 ? 's' : ''}
+            {displayJobs.length} role{displayJobs.length !== 1 ? 's' : ''}
           </p>
         </div>
 
@@ -355,6 +355,7 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
               const subCount = submissionCounts[job.id] ?? 0
               const estEarning = earningRange(job.budget_min, job.budget_max)
               const isHighPay  = job.budget_max != null && job.budget_max >= 4000000
+              const jobIsPaused = job.status === 'paused'
 
               return (
                 <div
@@ -364,8 +365,8 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
                     padding: '14px 16px',
                     borderBottom: '1px solid #EEF3F8',
                     cursor: 'pointer',
-                    background: isActive ? '#F0FBF9' : '#fff',
-                    borderLeft: `3px solid ${isActive ? '#0FB9B1' : 'transparent'}`,
+                    background: isActive ? (jobIsPaused ? '#FFFBEB' : '#F0FBF9') : '#fff',
+                    borderLeft: `3px solid ${isActive ? (jobIsPaused ? '#D69E2E' : '#0FB9B1') : 'transparent'}`,
                     transition: 'background 0.15s',
                   }}
                 >
@@ -382,9 +383,16 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: isActive ? '#032655' : '#1C2E4A', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {job.title}
-                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', overflow: 'hidden' }}>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: isActive ? '#032655' : '#1C2E4A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                          {job.title}
+                        </p>
+                        {jobIsPaused && (
+                          <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.52rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: '#B7791F', background: '#FFF8E7', border: '1px solid #F6E05E', borderRadius: '4px', padding: '1px 5px', flexShrink: 0 }}>
+                            Paused
+                          </span>
+                        )}
+                      </div>
                       {emp?.company_name && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '0 0 4px', overflow: 'hidden' }}>
                           <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#5A7A9F', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
@@ -439,6 +447,19 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
           </div>
         ) : (
           <div key={selected.id} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            {/* ── Paused job banner ────────────────────────────────────── */}
+            {selected.status === 'paused' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#FFF8E7', border: '1px solid #F6E05E', borderRadius: '12px', padding: '12px 18px' }}>
+                <svg width="18" height="18" fill="none" stroke="#B7791F" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                </svg>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700, color: '#B7791F', margin: '0 0 1px' }}>Not accepting applicants</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#D69E2E', margin: 0 }}>This job is temporarily paused. The employer is not accepting new candidate submissions at this time.</p>
+                </div>
+              </div>
+            )}
 
             {/* ── Job header card ──────────────────────────────────────── */}
             <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #D0DBE8', overflow: 'hidden', boxShadow: '0 1px 8px rgba(3,38,85,0.05)' }}>
@@ -530,13 +551,20 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
 
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <Link
-                    href={`/recruiter/dashboard/my-jobs/${selected.id}/submit`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 20px', borderRadius: '10px', background: '#032655', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}
-                  >
-                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
-                    Submit Candidate
-                  </Link>
+                  {selected.status === 'paused' ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 20px', borderRadius: '10px', background: '#FFF8E7', color: '#B7791F', border: '1px solid #F6E05E', fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700, cursor: 'not-allowed' }}>
+                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" /></svg>
+                      Not Accepting Applications
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/recruiter/dashboard/my-jobs/${selected.id}/submit`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 20px', borderRadius: '10px', background: '#032655', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}
+                    >
+                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+                      Submit Candidate
+                    </Link>
+                  )}
                   <SaveJobButton jobId={selected.id} initialSaved={savedJobIds?.has(selected.id) ?? false} />
                   {selected.jd_pdf_url && (
                     <a href={selected.jd_pdf_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '10px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600 }}>

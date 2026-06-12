@@ -30,6 +30,7 @@ export default async function Page({
   const { data: submissions } = jobIds.length
     ? await supabase
         .from('candidate_submissions').select('job_post_id').in('job_post_id', jobIds)
+        .or('consent_status.eq.consented,consent_status.is.null')
     : { data: [] }
 
   const countMap: Record<string, number> = {}

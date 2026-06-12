@@ -35,6 +35,7 @@ export default async function Page() {
       ? supabase.from('candidate_submissions')
           .select('id, candidate_name, status, submitted_at, job_post_id')
           .in('job_post_id', jobIds)
+          .or('consent_status.eq.consented,consent_status.is.null')
           .order('submitted_at', { ascending: false })
       : Promise.resolve({ data: [] }),
   ])

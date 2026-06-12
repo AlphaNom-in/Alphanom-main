@@ -1,26 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { updateSession }    from '@/lib/supabase/middleware'
-import { verifyAdminToken } from '@/lib/admin/auth'
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  if (pathname.startsWith('/admin')) {
-    if (pathname === '/admin/login') return NextResponse.next()
-    const token = request.cookies.get('admin_token')?.value
-    if (!verifyAdminToken(token)) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-    return NextResponse.next()
-  }
-
-  const response = await updateSession(request)
-  response.headers.set('x-pathname', request.nextUrl.pathname)
-  return response
+  return await updateSession(request)
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    /*
+     * Match all paths except Next.js internals and static files so every
+     * page request refreshes the Supabase session token.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

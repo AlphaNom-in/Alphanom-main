@@ -11,18 +11,20 @@ export async function sendBrevoEmail({
   toName,
   subject,
   html,
+  fromName,
 }: {
   to: string
   toName?: string
   subject: string
   html: string
+  fromName?: string
 }) {
   if (!process.env.RESEND_API_KEY || !FROM_EMAIL) {
     throw new Error('Resend credentials not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL in .env.local')
   }
 
   const { error } = await resend.emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    from: `${fromName ?? FROM_NAME} <${FROM_EMAIL}>`,
     to: toName ? `${toName} <${to}>` : to,
     subject,
     html,
