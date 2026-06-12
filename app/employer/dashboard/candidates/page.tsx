@@ -3,6 +3,7 @@ import { redirect }      from 'next/navigation'
 import Link              from 'next/link'
 import CandidatesFilter  from './CandidatesFilter'
 import ContactDropdown   from '@/components/employer/ContactDropdown'
+import UnlockButton      from '@/components/employer/UnlockButton'
 
 const STATUS_TABS = [
   { key: 'all',            label: 'All' },
@@ -69,7 +70,7 @@ export default async function Page({
   // Build query
   let query = supabase
     .from('candidate_submissions')
-    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, job_post_id, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url')
+    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, job_post_id, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url, profile_unlocked, profile_unlocked_at')
     .in('job_post_id', jobIds)
     .or('consent_status.eq.consented,consent_status.is.null')
     .order('submitted_at', { ascending: false })
@@ -190,6 +191,7 @@ export default async function Page({
             const st = STATUS_STYLE[c.status] ?? STATUS_STYLE.in_pipeline
             const hasMetrics = c.current_location || c.total_experience != null || c.current_ctc != null || c.notice_period
             const jobTitle = jobMap[c.job_post_id] ?? '—'
+            const locked = !c.profile_unlocked
 
             return (
               <div
@@ -197,34 +199,50 @@ export default async function Page({
                 style={{
                   background: '#fff', borderRadius: '16px',
                   border: '1px solid #D0DBE8',
-                  borderLeft: `4px solid ${st.accent}`,
+                  borderLeft: `4px solid ${locked ? '#E2E8F0' : st.accent}`,
                   boxShadow: '0 1px 4px rgba(3,38,85,0.06)',
                 }}
               >
                 {/* Identity */}
                 <div style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  {/* Avatar */}
                   <div style={{
                     width: '46px', height: '46px', borderRadius: '12px', flexShrink: 0,
-                    background: 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
+                    background: locked ? '#F1F5F9' : 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)',
+                    border: locked ? '1.5px solid #E2E8F0' : 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 4px 12px rgba(3,38,85,0.18)',
+                    boxShadow: locked ? 'none' : '0 4px 12px rgba(3,38,85,0.18)',
                   }}>
-                    <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '-0.02em' }}>
-                      {initials(c.candidate_name)}
-                    </span>
+                    {locked ? (
+                      <svg width="18" height="18" fill="none" stroke="#94A3B8" strokeWidth={1.8} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    ) : (
+                      <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.95rem', color: '#fff', letterSpacing: '-0.02em' }}>
+                        {initials(c.candidate_name)}
+                      </span>
+                    )}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '0.95rem', fontWeight: 800, color: '#032655', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
-                      {c.candidate_name}
-                    </h3>
+                    {/* Name — redacted bar when locked */}
+                    <div style={{ height: '22px', display: 'flex', alignItems: 'center', marginBottom: '3px' }}>
+                      {locked
+                        ? <span style={{ display: 'inline-block', width: '140px', height: '13px', borderRadius: '5px', background: '#CBD5E1' }} />
+                        : <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '0.95rem', fontWeight: 800, color: '#032655', margin: 0, letterSpacing: '-0.02em' }}>{c.candidate_name}</h3>
+                      }
+                    </div>
+
                     {(c.current_job_title || c.current_company) && (
-                      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600, color: '#5A7A9F', margin: '0 0 5px' }}>
-                        {[c.current_job_title, c.current_company].filter(Boolean).join(' · ')}
+                      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600, color: '#5A7A9F', margin: '0 0 6px' }}>
+                        {locked
+                          ? (c.current_company ?? c.current_job_title ?? '—')
+                          : [c.current_job_title, c.current_company].filter(Boolean).join(' · ')}
                       </p>
                     )}
-                    {/* Job pill + contact links */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+
+                    {/* Job pill + contacts */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <Link
                         href={`/employer/dashboard/jobs/${c.job_post_id}/applicants`}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 600, color: '#0FB9B1', textDecoration: 'none', background: '#F0FBF9', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(15,185,177,0.25)' }}
@@ -232,18 +250,38 @@ export default async function Page({
                         <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                         {jobTitle}
                       </Link>
-                      <ContactDropdown email={c.email} phone={c.phone} />
-                      {c.linkedin_url && (
-                        <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#0A66C2', textDecoration: 'none', fontWeight: 600 }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                          LinkedIn
-                        </a>
-                      )}
-                      {c.portfolio_url && (
-                        <a href={c.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#5A7A9F', textDecoration: 'none', fontWeight: 600 }}>
-                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                          Portfolio
-                        </a>
+                      {locked ? (
+                        /* Ghost locked buttons */
+                        <>
+                          {['Email', 'Call'].map(label => (
+                            <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '6px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#CBD5E1', userSelect: 'none' }}>
+                              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                              {label}
+                            </span>
+                          ))}
+                          {c.linkedin_url && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '6px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#CBD5E1', userSelect: 'none' }}>
+                              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                              LinkedIn
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <ContactDropdown email={c.email} phone={c.phone} />
+                          {c.linkedin_url && (
+                            <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#0A66C2', textDecoration: 'none', fontWeight: 600 }}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                              LinkedIn
+                            </a>
+                          )}
+                          {c.portfolio_url && (
+                            <a href={c.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', color: '#5A7A9F', textDecoration: 'none', fontWeight: 600 }}>
+                              <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                              Portfolio
+                            </a>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -252,11 +290,12 @@ export default async function Page({
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0,
                     padding: '5px 12px', borderRadius: '99px',
-                    background: st.bg, border: `1px solid ${st.accent}40`,
+                    background: locked ? '#F8FAFC' : st.bg,
+                    border: `1px solid ${locked ? '#E2E8F0' : st.accent + '40'}`,
                   }}>
-                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: st.accent }} />
-                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 700, color: st.color }}>
-                      {st.label}
+                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: locked ? '#CBD5E1' : st.accent }} />
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 700, color: locked ? '#94A3B8' : st.color }}>
+                      {locked ? 'Locked' : st.label}
                     </span>
                   </div>
                 </div>
@@ -283,7 +322,7 @@ export default async function Page({
                       },
                     ].filter(Boolean).map((m: any, i, arr) => (
                       <div key={m.label} style={{ flex: 1, padding: '10px 18px', borderRight: i < arr.length - 1 ? '1px solid #EEF3F8' : 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '5px' }}>
                           {m.icon}
                           <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>{m.label}</span>
                         </div>
@@ -299,21 +338,27 @@ export default async function Page({
                     Submitted {new Date(c.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {c.resume_url && (
-                      <a
-                        href={c.resume_url} target="_blank" rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '8px', background: '#032655', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700 }}
-                      >
-                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                        Resume
-                      </a>
+                    {locked ? (
+                      <UnlockButton submissionId={c.id} />
+                    ) : (
+                      <>
+                        {c.resume_url && (
+                          <a
+                            href={c.resume_url} target="_blank" rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '8px', background: '#032655', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700 }}
+                          >
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            Resume
+                          </a>
+                        )}
+                        <Link
+                          href={`/employer/dashboard/jobs/${c.job_post_id}/applicants`}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '8px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 600 }}
+                        >
+                          View in Job →
+                        </Link>
+                      </>
                     )}
-                    <Link
-                      href={`/employer/dashboard/jobs/${c.job_post_id}/applicants`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '8px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 600 }}
-                    >
-                      View in Job →
-                    </Link>
                   </div>
                 </div>
               </div>

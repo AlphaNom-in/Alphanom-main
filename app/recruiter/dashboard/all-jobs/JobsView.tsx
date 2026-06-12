@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import SaveJobButton from '@/components/recruiter/SaveJobButton'
+import ShareLinkButton from '@/components/recruiter/ShareLinkButton'
 import { INDIA_CITIES } from '@/lib/constants/cities'
 import { DEPARTMENTS } from '@/lib/constants/departments'
 
@@ -566,6 +567,7 @@ export default function JobsView({ jobs, submissionCounts, savedJobIds }: { jobs
                     </Link>
                   )}
                   <SaveJobButton jobId={selected.id} initialSaved={savedJobIds?.has(selected.id) ?? false} />
+                  <ShareLinkButton jobId={selected.id} compact />
                   {selected.jd_pdf_url && (
                     <a href={selected.jd_pdf_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '10px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600 }}>
                       <svg width="13" height="13" fill="none" stroke="#E53E3E" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>

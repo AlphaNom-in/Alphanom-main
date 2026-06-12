@@ -36,6 +36,7 @@ export default async function Page() {
           .select('id, candidate_name, status, submitted_at, job_post_id')
           .in('job_post_id', jobIds)
           .or('consent_status.eq.consented,consent_status.is.null')
+          .eq('profile_unlocked', true)
           .order('submitted_at', { ascending: false })
       : Promise.resolve({ data: [] }),
   ])
@@ -238,9 +239,9 @@ export default async function Page() {
         <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #D0DBE8', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #EEF3F8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
             <div>
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 700, color: '#032655', margin: 0 }}>Recent Candidates</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 700, color: '#032655', margin: 0 }}>Recent Unlocked Profiles</p>
               <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', color: '#96AFCA', margin: '2px 0 0' }}>
-                {totalCandidates} total submission{totalCandidates !== 1 ? 's' : ''}
+                {totalCandidates} unlocked profile{totalCandidates !== 1 ? 's' : ''}
               </p>
             </div>
             <Link href="/employer/dashboard/jobs" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#0FB9B1', fontWeight: 600, textDecoration: 'none' }}>

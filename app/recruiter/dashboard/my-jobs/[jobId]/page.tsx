@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound, redirect } from 'next/navigation'
+import ShareLinkButton from '@/components/recruiter/ShareLinkButton'
 
 function isHTML(text: string): boolean {
   return /<\/?(p|div|b|i|u|br|ul|ol|li|strong|em|h[1-6]|span)\b[^>]*>/i.test(text)
@@ -163,7 +164,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
       </div>
 
       {/* Fixed CTA */}
-      <div style={{ flexShrink: 0, paddingTop: '14px', borderTop: '1px solid #D0DBE8', marginTop: '4px' }}>
+      <div style={{ flexShrink: 0, paddingTop: '14px', borderTop: '1px solid #D0DBE8', marginTop: '4px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
         <Link
           href={`/recruiter/dashboard/my-jobs/${job.id}/submit`}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '11px 24px', borderRadius: '10px', background: '#0FB9B1', color: '#fff', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}
@@ -173,6 +174,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </Link>
+        <ShareLinkButton jobId={job.id} />
       </div>
     </div>
   )

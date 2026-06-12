@@ -24,7 +24,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
   const { data: applicants } = await supabase
     .from('candidate_submissions')
-    .select('id, candidate_name, email, phone, current_job_title, current_company, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url, recruiter_note, status, submitted_at')
+    .select('id, candidate_name, email, phone, current_job_title, current_company, current_ctc, current_location, total_experience, notice_period, linkedin_url, portfolio_url, resume_url, recruiter_note, status, submitted_at, profile_unlocked, profile_unlocked_at')
     .eq('job_post_id', jobId)
     .or('consent_status.eq.consented,consent_status.is.null')
     .order('submitted_at', { ascending: false })

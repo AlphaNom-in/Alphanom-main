@@ -68,7 +68,7 @@ export default async function AdminCandidatesPage({
   // Main query — apply filters + paginate
   let query = admin
     .from('candidate_submissions')
-    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, current_ctc, total_experience, consent_status, consent_token_expires_at, job_posts(title, employers(company_name)), recruiters(id, full_name)', { count: 'exact' })
+    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, current_ctc, total_experience, consent_status, consent_token_expires_at, profile_unlocked, profile_unlocked_at, job_posts(title, employers(company_name)), recruiters(id, full_name)', { count: 'exact' })
     .order('submitted_at', { ascending: false })
     .range(from, to)
 
@@ -240,7 +240,7 @@ export default async function AdminCandidatesPage({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
               <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #EEF2F7' }}>
-                {['Record ID', 'Candidate', 'Job Title', 'Company', 'Recruiter', 'CTC', 'Exp', 'Consent', 'Pipeline', 'Submission Timestamp'].map(h => (
+                {['Record ID', 'Candidate', 'Job Title', 'Company', 'Recruiter', 'CTC', 'Exp', 'Consent', 'Pipeline', 'Profile Unlocked', 'Submission Timestamp'].map(h => (
                   <th key={h} style={{ padding: '11px 16px', fontFamily: 'var(--font-ui)', fontSize: '0.62rem', fontWeight: 700, color: h === 'Record ID' || h === 'Submission Timestamp' ? '#7C3AED' : '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -322,6 +322,27 @@ export default async function AdminCandidatesPage({
                         </span>
                       ) : (
                         <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#96AFCA' }}>—</span>
+                      )}
+                    </td>
+                    {/* Profile Unlocked */}
+                    <td style={{ padding: '12px 16px' }}>
+                      {s.profile_unlocked && s.profile_unlocked_at ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '99px', background: '#D8F0EB', color: '#0A9E97', whiteSpace: 'nowrap', marginBottom: '3px' }}>
+                            <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                            </svg>
+                            Unlocked
+                          </span>
+                          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', fontWeight: 600, color: '#3D5A7A', margin: 0, whiteSpace: 'nowrap' }}>
+                            {new Date(s.profile_unlocked_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                          <p style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.62rem', color: '#0A9E97', margin: 0, whiteSpace: 'nowrap', fontWeight: 600 }}>
+                            {new Date(s.profile_unlocked_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })} IST
+                          </p>
+                        </div>
+                      ) : (
+                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#D0DBE8' }}>—</span>
                       )}
                     </td>
                     {/* Submission Timestamp */}
