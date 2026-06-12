@@ -84,7 +84,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pageTitle = PAGE_TITLES[pathname] ?? 'Admin'
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F4F6FB', fontFamily: 'var(--font-ui)' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F4F6FB', fontFamily: 'var(--font-ui)' }}>
 
       <style>{`
         .an-nav-link:hover:not(.an-nav-active) {
@@ -206,7 +206,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* ── Main wrapper ────────────────────────────────── */}
-      <div style={{ marginLeft: '232px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ marginLeft: '232px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
 
         {/* Top bar */}
         <header style={{
@@ -233,7 +233,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '28px 32px 48px', minWidth: 0 }}>
+        <main style={{ flex: 1, minHeight: 0, padding: '28px 32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {children}
         </main>
       </div>

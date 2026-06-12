@@ -41,9 +41,14 @@ function avatarColor(name: string) {
 export default async function AdminCandidatesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; recruiter_id?: string; consent?: string }>
+  searchParams: Promise<{ status?: string; recruiter_id?: string; consent?: string; page?: string }>
 }) {
-  const { status, recruiter_id, consent: consentFilter } = await searchParams
+  const { status, recruiter_id, consent: consentFilter, page: pageParam } = await searchParams
+
+  const PAGE_SIZE   = 10
+  const currentPage = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
+  const from        = (currentPage - 1) * PAGE_SIZE
+  const to          = from + PAGE_SIZE - 1
   const admin = createAdminClient()
 
   // Counts query (unfiltered by status/consent)
@@ -60,12 +65,12 @@ export default async function AdminCandidatesPage({
   const pendingCount   = allSubs.filter(s => s.consent_status === 'pending_consent').length
   const withdrawnCount = allSubs.filter(s => s.consent_status === 'withdrawn').length
 
-  // Main query — apply filters
+  // Main query — apply filters + paginate
   let query = admin
     .from('candidate_submissions')
-    .select('id, candidate_name, email, status, submitted_at, current_ctc, total_experience, consent_status, consent_token_expires_at, job_posts(title, employers(company_name)), recruiters(id, full_name)')
+    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, current_ctc, total_experience, consent_status, consent_token_expires_at, job_posts(title, employers(company_name)), recruiters(id, full_name)', { count: 'exact' })
     .order('submitted_at', { ascending: false })
-    .limit(200)
+    .range(from, to)
 
   if (status && status !== 'all')   query = query.eq('status', status)
   if (recruiter_id)                 query = query.eq('recruiter_id', recruiter_id)
@@ -73,15 +78,28 @@ export default async function AdminCandidatesPage({
   else if (consentFilter === 'pending')   query = query.eq('consent_status', 'pending_consent')
   else if (consentFilter === 'withdrawn') query = query.eq('consent_status', 'withdrawn')
 
-  const { data: submissions } = await query
+  const { data: submissions, count: filteredCount } = await query
 
-  // Build filter href helper
+  const totalPages  = Math.max(1, Math.ceil((filteredCount ?? 0) / PAGE_SIZE))
+
+  // Build filter href helper — filter changes always reset to page 1
   function href(params: { status?: string; consent?: string; recruiter_id?: string }) {
     const p = new URLSearchParams()
     if (params.recruiter_id ?? recruiter_id) p.set('recruiter_id', params.recruiter_id ?? recruiter_id!)
     if (params.status   && params.status   !== 'all') p.set('status',  params.status)
     if (params.consent  && params.consent  !== 'all') p.set('consent', params.consent)
     const s = p.toString()
+    return `/admin/candidates${s ? `?${s}` : ''}`
+  }
+
+  // Build page href — preserves active filters
+  function hrefPage(p: number) {
+    const params = new URLSearchParams()
+    if (recruiter_id)                           params.set('recruiter_id', recruiter_id)
+    if (status       && status       !== 'all') params.set('status',  status)
+    if (consentFilter && consentFilter !== 'all') params.set('consent', consentFilter)
+    if (p > 1) params.set('page', String(p))
+    const s = params.toString()
     return `/admin/candidates${s ? `?${s}` : ''}`
   }
 
@@ -105,14 +123,19 @@ export default async function AdminCandidatesPage({
   const currentConsent = consentFilter ?? 'all'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 0 }}>
       <style>{`.an-tr:hover td { background: #F8FAFC; } .an-tab:hover { border-color: #96AFCA !important; color: #3D5A7A !important; }`}</style>
+      {/* ── Static header section ─────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '16px' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', fontWeight: 700, color: '#7C3AED', letterSpacing: '0.14em', textTransform: 'uppercase', margin: '0 0 4px' }}>Tracking</p>
-          <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.5rem', fontWeight: 800, color: '#0F1C2E', letterSpacing: '-0.03em', margin: 0 }}>Candidates</h1>
+          <h1 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.5rem', fontWeight: 800, color: '#0F1C2E', letterSpacing: '-0.03em', margin: '0 0 4px' }}>Candidates</h1>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#96AFCA', margin: 0 }}>
+            Submission timestamps &amp; record IDs are immutable audit records for resolving duplicate submission or prior-claim disputes.
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           {[
@@ -206,15 +229,19 @@ export default async function AdminCandidatesPage({
           })}
         </div>
       </div>
+      </div>{/* end static section */}
 
-      {/* Table */}
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E4EAF1', overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
+      {/* ── Scrollable data section ───────────────────────────────────────── */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+      {/* Table — card scrolls internally; thead is sticky */}
+      <div style={{ flex: 1, minHeight: 0, background: '#fff', borderRadius: '12px', border: '1px solid #E4EAF1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
               <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #EEF2F7' }}>
-                {['Candidate', 'Job Title', 'Company', 'Recruiter', 'CTC', 'Exp', 'Consent', 'Pipeline', 'Submitted'].map(h => (
-                  <th key={h} style={{ padding: '11px 16px', fontFamily: 'var(--font-ui)', fontSize: '0.62rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left', whiteSpace: 'nowrap' }}>{h}</th>
+                {['Record ID', 'Candidate', 'Job Title', 'Company', 'Recruiter', 'CTC', 'Exp', 'Consent', 'Pipeline', 'Submission Timestamp'].map(h => (
+                  <th key={h} style={{ padding: '11px 16px', fontFamily: 'var(--font-ui)', fontSize: '0.62rem', fontWeight: 700, color: h === 'Record ID' || h === 'Submission Timestamp' ? '#7C3AED' : '#96AFCA', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -225,6 +252,17 @@ export default async function AdminCandidatesPage({
                 const col     = avatarColor(s.candidate_name)
                 return (
                   <tr key={s.id} className="an-tr" style={{ borderBottom: '1px solid #F4F6FB' }}>
+                    {/* Record ID */}
+                    <td style={{ padding: '12px 16px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.62rem', fontWeight: 700, color: '#7C3AED', background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '5px', padding: '2px 7px', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
+                          {s.id.slice(0, 8)}…
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.52rem', color: '#B0BEC5', whiteSpace: 'nowrap' }} title={s.id}>
+                          {s.id.slice(8, 18)}…
+                        </span>
+                      </div>
+                    </td>
                     {/* Candidate */}
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
@@ -234,6 +272,8 @@ export default async function AdminCandidatesPage({
                         <div style={{ minWidth: 0 }}>
                           <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.8rem', fontWeight: 700, color: '#0F1C2E', margin: 0, whiteSpace: 'nowrap' }}>{s.candidate_name}</p>
                           {s.email && <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', color: '#96AFCA', margin: '1px 0 0', whiteSpace: 'nowrap' }}>{s.email}</p>}
+                          {s.phone && <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', color: '#96AFCA', margin: '1px 0 0', whiteSpace: 'nowrap' }}>{s.phone}</p>}
+                          {s.current_job_title && <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', color: '#B0BEC5', margin: '1px 0 0', whiteSpace: 'nowrap' }}>{s.current_job_title}{s.current_company ? ` · ${s.current_company}` : ''}</p>}
                         </div>
                       </div>
                     </td>
@@ -284,11 +324,19 @@ export default async function AdminCandidatesPage({
                         <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.68rem', color: '#96AFCA' }}>—</span>
                       )}
                     </td>
-                    {/* Date */}
+                    {/* Submission Timestamp */}
                     <td style={{ padding: '12px 16px' }}>
-                      <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#96AFCA', margin: 0, whiteSpace: 'nowrap' }}>
-                        {new Date(s.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700, color: '#3D5A7A', margin: 0, whiteSpace: 'nowrap' }}>
+                          {new Date(s.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                        <p style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.68rem', color: '#7C3AED', margin: 0, whiteSpace: 'nowrap', fontWeight: 600 }}>
+                          {new Date(s.submitted_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })} IST
+                        </p>
+                        <p style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.55rem', color: '#B0BEC5', margin: 0, whiteSpace: 'nowrap' }} title={s.submitted_at}>
+                          {new Date(s.submitted_at).toISOString().replace('T', ' ').slice(0, 19)} UTC
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -307,6 +355,77 @@ export default async function AdminCandidatesPage({
           )}
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', paddingBottom: '4px' }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#96AFCA', margin: 0 }}>
+            Showing {from + 1}–{Math.min(to + 1, filteredCount ?? 0)} of <strong style={{ color: '#3D5A7A' }}>{filteredCount}</strong> submissions
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {/* Prev */}
+            {currentPage > 1 ? (
+              <a href={hrefPage(currentPage - 1)} style={pgBtn(false)}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </a>
+            ) : (
+              <span style={pgBtn(false, true)}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </span>
+            )}
+
+            {/* Page numbers */}
+            {buildPageRange(currentPage, totalPages).map((item, i) =>
+              item === '…' ? (
+                <span key={`ellipsis-${i}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#96AFCA', padding: '0 4px' }}>…</span>
+              ) : (
+                <a key={item} href={hrefPage(item as number)} style={pgBtn(item === currentPage)}>
+                  {item}
+                </a>
+              )
+            )}
+
+            {/* Next */}
+            {currentPage < totalPages ? (
+              <a href={hrefPage(currentPage + 1)} style={pgBtn(false)}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </a>
+            ) : (
+              <span style={pgBtn(false, true)}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+      </div>{/* end scrollable section */}
     </div>
   )
+}
+
+function pgBtn(active: boolean, disabled = false): React.CSSProperties {
+  return {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    minWidth: '32px', height: '32px', padding: '0 8px',
+    borderRadius: '7px', textDecoration: 'none',
+    fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: active ? 700 : 500,
+    background: active ? '#7C3AED' : disabled ? '#F8FAFC' : '#fff',
+    color:      active ? '#fff'    : disabled ? '#C0CCDA' : '#3D5A7A',
+    border:     `1.5px solid ${active ? '#7C3AED' : '#E4EAF1'}`,
+    cursor:     disabled ? 'default' : 'pointer',
+    pointerEvents: disabled ? 'none' : 'auto',
+  }
+}
+
+function buildPageRange(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | '…')[] = []
+  const addPage = (n: number) => { if (!pages.includes(n)) pages.push(n) }
+  const addEllipsis = () => { if (pages[pages.length - 1] !== '…') pages.push('…') }
+  addPage(1)
+  if (current > 3) addEllipsis()
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) addPage(i)
+  if (current < total - 2) addEllipsis()
+  addPage(total)
+  return pages
 }
