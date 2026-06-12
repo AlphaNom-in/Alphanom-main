@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import ResendConsentButton from './ResendConsentButton'
+import { createClient } from '@/lib/supabase/client'
 
 const PAGE_SIZE = 10
 
@@ -43,16 +44,49 @@ export type Stats = {
 }
 
 export default function SubmissionsView({
-  submissions,
-  stats,
+  submissions: initialSubmissions,
+  stats: initialStats,
+  recruiterId,
 }: {
   submissions: Submission[]
   stats: Stats
+  recruiterId: string
 }) {
+  const [subs,          setSubs]          = useState(initialSubmissions)
   const [search,        setSearch]        = useState('')
   const [companyFilter, setCompanyFilter] = useState('all')
   const [consentFilter, setConsentFilter] = useState('all')
   const [page,          setPage]          = useState(1)
+
+  // Live consent status updates
+  useEffect(() => {
+    const supabase = createClient()
+    const channel  = supabase
+      .channel('submissions-consent-watch')
+      .on('postgres_changes', {
+        event:  'UPDATE',
+        schema: 'public',
+        table:  'candidate_submissions',
+        filter: `recruiter_id=eq.${recruiterId}`,
+      }, (payload: any) => {
+        const u = payload.new
+        setSubs(prev => prev.map(s =>
+          s.id === u.id
+            ? { ...s, consent_status: u.consent_status, consent_token_expires_at: u.consent_token_expires_at }
+            : s
+        ))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [recruiterId])
+
+  // Recompute stats live from current subs
+  const stats = useMemo<Stats>(() => ({
+    total:     subs.length,
+    consented: subs.filter(s => s.consent_status === 'consented' || s.consent_status === null).length,
+    pending:   subs.filter(s => s.consent_status === 'pending_consent').length,
+    withdrawn: subs.filter(s => s.consent_status === 'withdrawn').length,
+  }), [subs])
 
   function changeFilter<T>(setter: (v: T) => void) {
     return (v: T) => { setter(v); setPage(1) }
@@ -61,16 +95,16 @@ export default function SubmissionsView({
   // Unique companies from submissions
   const companies = useMemo(() => {
     const seen = new Set<string>()
-    for (const s of submissions) {
+    for (const s of subs) {
       const c = s.job_posts?.employers?.company_name
       if (c) seen.add(c)
     }
     return Array.from(seen).sort()
-  }, [submissions])
+  }, [subs])
 
   // Apply all filters
   const filtered = useMemo(() => {
-    let r = submissions
+    let r = subs
     const q = search.trim().toLowerCase()
     if (q)                            r = r.filter(s => s.candidate_name.toLowerCase().includes(q))
     if (companyFilter !== 'all')      r = r.filter(s => s.job_posts?.employers?.company_name === companyFilter)
@@ -78,7 +112,7 @@ export default function SubmissionsView({
     else if (consentFilter === 'pending')   r = r.filter(s => s.consent_status === 'pending_consent')
     else if (consentFilter === 'withdrawn') r = r.filter(s => s.consent_status === 'withdrawn')
     return r
-  }, [submissions, search, companyFilter, consentFilter])
+  }, [subs, search, companyFilter, consentFilter])
 
   const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage    = Math.min(page, totalPages)

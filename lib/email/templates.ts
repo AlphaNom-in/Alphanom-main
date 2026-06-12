@@ -33,7 +33,7 @@ export function consentEmailHtml({
         <tr><td style="padding:36px 40px 0;">
           <p style="font-size:15px;color:#1a202c;margin:0 0 20px;line-height:1.7;">Dear ${candidateFirstName},</p>
           <p style="font-size:15px;color:#2d3748;margin:0 0 16px;line-height:1.8;">
-            We are pleased to inform you that your profile has been shortlisted for the
+            We are pleased to inform you that your profile has been submitted for the
             <strong style="color:#1a202c;">${jobTitle}</strong> position at <strong style="color:#1a202c;">${companyName}</strong>.
           </p>
           <p style="font-size:14px;color:#4a5568;margin:0 0 28px;line-height:1.8;">

@@ -34,6 +34,7 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
   const [consentEmail,     setConsentEmail]     = useState('')
   const [submissionId,     setSubmissionId]     = useState('')
   const [consentReceived,  setConsentReceived]  = useState(false)
+  const [consentDeclined,  setConsentDeclined]  = useState(false)
 
   // Step 1 — Candidate Info
   const [candidateName,    setCandidateName]    = useState('')
@@ -145,7 +146,7 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
 
   function resetForm() {
     setStep(0); setStepError(''); setSubmitted(false)
-    setConsentReceived(false); setSubmissionId(''); setConsentEmail('')
+    setConsentReceived(false); setConsentDeclined(false); setSubmissionId(''); setConsentEmail('')
     setCandidateName(''); setEmail(''); setPhone(''); setCurrentJobTitle(''); setCurrentCompany('')
     setCurrentCtc(''); setExpectedCtc(''); setTotalExperience(''); setCurrentLocation(''); setNoticePeriod(''); setCandidateAware(false)
     setLinkedinUrl(''); setPortfolioUrl(''); setResume(null); setFitReason('')
@@ -163,7 +164,8 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
         table:  'candidate_submissions',
         filter: `id=eq.${submissionId}`,
       }, (payload: any) => {
-        if (payload.new?.consent_status === 'consented') setConsentReceived(true)
+        if (payload.new?.consent_status === 'consented')  setConsentReceived(true)
+        if (payload.new?.consent_status === 'withdrawn')  setConsentDeclined(true)
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -249,6 +251,83 @@ export default function SubmitCandidateForm({ jobId, jobTitle }: { jobId: string
             onClick={() => router.push('/recruiter/dashboard/submissions')}
             style={{ flex: 1, padding: '11px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#032655,#065f46)', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}
           >
+            View Submissions →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Candidate declined ─────────────────────────────────────────────────── */
+  if (submitted && consentDeclined) {
+    return (
+      <div style={{ padding: '1.5rem 0.5rem' }}>
+        {/* Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1a0a0a 0%, #450a0a 100%)',
+          borderRadius: '16px', padding: '24px 20px', marginBottom: '1.25rem', textAlign: 'center', position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', borderRadius: '50%', border: '1.5px solid rgba(239,68,68,0.2)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '150px', height: '150px', borderRadius: '50%', border: '1.5px solid rgba(239,68,68,0.1)', pointerEvents: 'none' }} />
+
+          <div style={{
+            width: '60px', height: '60px', borderRadius: '50%',
+            background: 'rgba(239,68,68,0.15)', border: '2px solid rgba(239,68,68,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
+            boxShadow: '0 0 0 8px rgba(239,68,68,0.07)',
+          }}>
+            <svg width="26" height="26" fill="none" stroke="#ef4444" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+
+          <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.1rem', fontWeight: 900, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+            Submission Declined
+          </h3>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.5 }}>
+            {candidateName} has declined this submission
+          </p>
+        </div>
+
+        {/* Status card */}
+        <div style={{ background: '#FFF5F5', border: '1.5px solid #FEB2B2', borderRadius: '14px', padding: '16px 18px', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 800, color: '#742A2A', textTransform: 'uppercase' as const, letterSpacing: '0.08em', margin: 0 }}>
+              Submission Withdrawn
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px' }}>
+            {[
+              { label: 'Candidate', value: candidateName },
+              { label: 'Position',  value: jobTitle },
+              { label: 'Status',    value: 'Declined by candidate' },
+              { label: 'Visibility', value: 'Not shared with employer' },
+            ].map(row => (
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#C53030', margin: 0 }}>{row.label}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 700, color: '#742A2A', margin: 0 }}>{row.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Info note */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: '#F5F8FC', borderRadius: '10px', border: '1px solid #EEF3F8', padding: '12px 14px', marginBottom: '1.5rem' }}>
+          <svg width="15" height="15" fill="none" stroke="#96AFCA" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: '1px' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+          </svg>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#5A7A9F', margin: 0, lineHeight: 1.6 }}>
+            {candidateName.split(' ')[0]}'s profile has not been shared with the employer. Please speak with the candidate before resubmitting.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={resetForm} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#032655', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}>
+            Submit Another
+          </button>
+          <button onClick={() => router.push('/recruiter/dashboard/submissions')} style={{ flex: 1, padding: '11px', borderRadius: '10px', border: 'none', background: '#032655', color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}>
             View Submissions →
           </button>
         </div>

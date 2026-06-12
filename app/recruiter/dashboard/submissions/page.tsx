@@ -72,6 +72,7 @@ export default async function Page() {
         <SubmissionsView
           submissions={all as any}
           stats={{ total, consented, pending, withdrawn }}
+          recruiterId={recruiter.id}
         />
       )}
     </div>
