@@ -25,8 +25,10 @@ export async function updateJob(jobId: string, formData: FormData) {
     try { return JSON.parse(v) } catch { return [] }
   }
 
-  const budgetMinLPA = Number(raw('budget_min'))
-  const budgetMaxLPA = Number(raw('budget_max'))
+  const budgetMinLPA    = Number(raw('budget_min'))
+  const budgetMaxLPA    = Number(raw('budget_max'))
+  const limitRaw        = raw('application_limit')
+  const applicationLimit = limitRaw && Number(limitRaw) > 0 ? Number(limitRaw) : null
 
   const admin = createAdminClient()
   const { error } = await admin
@@ -43,6 +45,7 @@ export async function updateJob(jobId: string, formData: FormData) {
       mandatory_criteria:  arr('mandatory_criteria'),
       preferred_criteria:  arr('preferred_criteria'),
       preferred_companies: arr('preferred_companies'),
+      application_limit:   applicationLimit,
     })
     .eq('id', jobId)
 

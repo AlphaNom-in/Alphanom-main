@@ -15,7 +15,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
   const { data: job } = await supabase
     .from('job_posts')
-    .select('id, title, department, location, work_model, budget_min, budget_max, notice_period, recruiter_note, mandatory_criteria, preferred_criteria, preferred_companies, status')
+    .select('id, title, department, location, work_model, budget_min, budget_max, notice_period, recruiter_note, mandatory_criteria, preferred_criteria, preferred_companies, status, application_limit')
     .eq('id', jobId)
     .eq('employer_id', employer?.id)
     .single()

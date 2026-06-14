@@ -94,7 +94,7 @@ type Job = {
   work_model: string | null; budget_min: number | null; budget_max: number | null
   notice_period: string | null; recruiter_note: string | null
   mandatory_criteria: string[] | null; preferred_criteria: string[] | null
-  preferred_companies: string[] | null
+  preferred_companies: string[] | null; application_limit: number | null
 }
 
 export default function EditJobForm({ job }: { job: Job }) {
@@ -173,6 +173,20 @@ export default function EditJobForm({ job }: { job: Job }) {
         <div>
           <label style={lbl}>Notice Period</label>
           <input name="notice_period" defaultValue={job.notice_period ?? ''} placeholder="e.g. 30 days" style={inp} />
+        </div>
+        <div>
+          <label style={lbl}>Application Limit</label>
+          <input
+            name="application_limit"
+            type="number"
+            min={1}
+            defaultValue={job.application_limit ?? ''}
+            placeholder="Leave blank for unlimited"
+            style={inp}
+          />
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', color: '#96AFCA', marginTop: '4px' }}>
+            Job will auto-pause once this many submissions are received. Clear to remove the limit.
+          </p>
         </div>
       </Section>
 

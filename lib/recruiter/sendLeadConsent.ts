@@ -202,6 +202,17 @@ export async function submitLeadAsCandidate(leadId: string): Promise<SubmitLeadR
   if (!lead) return { ok: false, error: 'Lead not found' }
   if (lead.status === 'consented') return { ok: false, error: 'Already submitted.' }
 
+  // Reject if job is no longer active
+  const { data: jobCheck } = await admin
+    .from('job_posts')
+    .select('status, application_limit')
+    .eq('id', lead.job_post_id)
+    .single()
+
+  if (!jobCheck || jobCheck.status !== 'active') {
+    return { ok: false, error: 'This job is no longer accepting submissions.' }
+  }
+
   const consentToken  = crypto.randomUUID()
   const consentExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
 
@@ -241,6 +252,21 @@ export async function submitLeadAsCandidate(leadId: string): Promise<SubmitLeadR
     .from('recruiter_leads')
     .update({ status: 'consent_sent', submission_id: submission.id })
     .eq('id', leadId)
+
+  // Auto-pause job if application_limit is reached
+  if (jobCheck.application_limit) {
+    const { count: totalCount } = await admin
+      .from('candidate_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('job_post_id', lead.job_post_id)
+
+    if ((totalCount ?? 0) >= jobCheck.application_limit) {
+      await admin
+        .from('job_posts')
+        .update({ status: 'paused', auto_paused: true })
+        .eq('id', lead.job_post_id)
+    }
+  }
 
   const { data: jobPost } = await admin
     .from('job_posts')

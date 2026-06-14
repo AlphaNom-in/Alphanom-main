@@ -37,6 +37,17 @@ export async function submitCandidate(formData: FormData) {
 
   const jobPostId = raw('job_post_id')
 
+  // Reject submissions to paused or closed jobs
+  const { data: jobCheck } = await admin
+    .from('job_posts')
+    .select('status, application_limit')
+    .eq('id', jobPostId)
+    .single()
+
+  if (!jobCheck || jobCheck.status !== 'active') {
+    throw new Error('This job is no longer accepting submissions.')
+  }
+
   // Hard limit: 7 unique submissions per recruiter per job
   const { count } = await admin
     .from('candidate_submissions')
@@ -90,6 +101,22 @@ export async function submitCandidate(formData: FormData) {
     .single()
 
   if (error) throw error
+
+  // Auto-pause job if application_limit is reached
+  if (jobCheck.application_limit) {
+    const { count: totalCount } = await admin
+      .from('candidate_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('job_post_id', jobPostId)
+
+    if ((totalCount ?? 0) >= jobCheck.application_limit) {
+      await admin
+        .from('job_posts')
+        .update({ status: 'paused', auto_paused: true })
+        .eq('id', jobPostId)
+      revalidatePath('/employer/dashboard/jobs')
+    }
+  }
 
   // Fetch job + company for the email
   const { data: jobPost } = await admin

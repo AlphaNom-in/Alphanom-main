@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { closeJob } from '@/lib/employer/closeJob'
 import { toggleJobPause } from '@/lib/employer/pauseJob'
+import { reopenJob } from '@/lib/employer/reopenJob'
 
 async function handleClose(jobId: string) {
   'use server'
@@ -13,6 +14,11 @@ async function handleClose(jobId: string) {
 async function handlePause(jobId: string, currentStatus: string) {
   'use server'
   await toggleJobPause(jobId, currentStatus)
+}
+
+async function handleReopen(jobId: string) {
+  'use server'
+  await reopenJob(jobId)
 }
 
 /* Budget handles both old (LPA int) and new (rupees) storage formats */
@@ -100,8 +106,9 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
     supabase.from('candidate_submissions').select('*', { count: 'exact', head: true }).eq('job_post_id', jobId).eq('status', 'hired').or('consent_status.eq.consented,consent_status.is.null'),
   ])
 
-  const isClosed   = job.status === 'closed'
-  const isPaused   = job.status === 'paused'
+  const isClosed    = job.status === 'closed'
+  const isPaused    = job.status === 'paused'
+  const isAutoPaused = isPaused && !!job.auto_paused
   const budgetMin  = formatBudget(job.budget_min)
   const budgetMax  = formatBudget(job.budget_max)
   const hasBudget  = budgetMin || budgetMax
@@ -122,6 +129,24 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
           All Jobs
         </Link>
       </div>
+
+      {/* Auto-paused banner */}
+      {isAutoPaused && (
+        <div style={{ flexShrink: 0, background: '#FFF8E7', border: '1px solid #F6E05E', borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '4px' }}>
+          <svg width="16" height="16" fill="none" stroke="#D69E2E" strokeWidth={2} viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: '1px' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.008v.008H12v-.008z" />
+          </svg>
+          <div>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', fontWeight: 700, color: '#B7791F', margin: '0 0 3px' }}>
+              Application limit reached — job auto-paused
+            </p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#975A16', margin: 0, lineHeight: 1.5 }}>
+              This job received {job.application_limit} submission{job.application_limit !== 1 ? 's' : ''} and was automatically paused.
+              Click &ldquo;Reopen for More Applications&rdquo; to accept new submissions (limit will be cleared).
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '4px' }}>
@@ -168,21 +193,30 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
                   )}
                 </Link>
                 {!isClosed && (
-                  <form action={handlePause.bind(null, jobId, job.status)}>
-                    <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', background: isPaused ? '#D8F0EB' : '#FFF8E7', color: isPaused ? '#0A9E97' : '#B7791F', border: `1px solid ${isPaused ? 'rgba(15,185,177,0.35)' : '#F6E05E'}`, fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
-                      {isPaused ? (
-                        <>
-                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></svg>
-                          Resume Job
-                        </>
-                      ) : (
-                        <>
-                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" /></svg>
-                          Pause Job
-                        </>
-                      )}
-                    </button>
-                  </form>
+                  isAutoPaused ? (
+                    <form action={handleReopen.bind(null, jobId)}>
+                      <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', background: '#D8F0EB', color: '#0A9E97', border: '1px solid rgba(15,185,177,0.35)', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></svg>
+                        Reopen for More Applications
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={handlePause.bind(null, jobId, job.status)}>
+                      <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', background: isPaused ? '#D8F0EB' : '#FFF8E7', color: isPaused ? '#0A9E97' : '#B7791F', border: `1px solid ${isPaused ? 'rgba(15,185,177,0.35)' : '#F6E05E'}`, fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
+                        {isPaused ? (
+                          <>
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></svg>
+                            Resume Job
+                          </>
+                        ) : (
+                          <>
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" /></svg>
+                            Pause Job
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  )
                 )}
                 {!isClosed && (
                   <form action={handleClose.bind(null, jobId)}>
@@ -220,7 +254,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
         </div>
 
         {/* ── Pipeline strip ────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `1fr 1fr 1fr${job.application_limit ? ' 1fr' : ''} auto`, gap: '10px', flexShrink: 0 }}>
           {[
             { label: 'Total Submitted', value: totalApplicants ?? 0, color: '#5A7A9F', bg: '#EEF3F8', border: '#D0DBE8' },
             { label: 'Shortlisted',     value: shortlisted ?? 0,    color: '#0A9E97', bg: '#D8F0EB', border: 'rgba(15,185,177,0.25)' },
@@ -231,6 +265,14 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
               <span style={{ fontFamily: 'var(--font-ui)', fontSize: '1.4rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</span>
             </div>
           ))}
+          {job.application_limit && (
+            <div style={{ background: isAutoPaused ? '#FFF8E7' : '#F5F8FC', border: `1px solid ${isAutoPaused ? '#F6E05E' : '#D0DBE8'}`, borderRadius: '12px', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', fontWeight: 600, color: isAutoPaused ? '#B7791F' : '#5A7A9F' }}>Application Cap</span>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: '1.4rem', fontWeight: 800, color: isAutoPaused ? '#D69E2E' : '#032655', lineHeight: 1 }}>
+                {totalApplicants ?? 0}<span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#96AFCA' }}>/{job.application_limit}</span>
+              </span>
+            </div>
+          )}
           {/* JD PDF if exists */}
           {job.jd_pdf_url ? (
             <a href={job.jd_pdf_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #D0DBE8', borderRadius: '12px', padding: '14px 18px', color: '#032655', textDecoration: 'none', whiteSpace: 'nowrap' as const }}>

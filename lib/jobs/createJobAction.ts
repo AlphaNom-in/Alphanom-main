@@ -17,6 +17,7 @@ export async function createJobAction(jobData: {
   mandatory_criteria?: string[]
   preferred_criteria?: string[]
   preferred_companies?: string[]
+  application_limit?: number
 }) {
   const supabase = await createClient()
 

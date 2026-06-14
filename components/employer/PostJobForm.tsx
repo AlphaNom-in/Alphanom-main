@@ -44,6 +44,7 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
   const [budgetMin,          setBudgetMin]          = useState('')
   const [budgetMax,          setBudgetMax]          = useState('')
   const [noticePeriod,       setNoticePeriod]       = useState(defaultNoticePeriod ?? '')
+  const [applicationLimit,   setApplicationLimit]   = useState('')
   const [recruiterNote,      setRecruiterNote]      = useState('')
   const [mandatoryCriteria,  setMandatoryCriteria]  = useState<string[]>([])
   const [preferredCriteria,  setPreferredCriteria]  = useState<string[]>([])
@@ -90,6 +91,7 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
         mandatory_criteria: mandatoryCriteria,
         preferred_criteria: preferredCriteria,
         preferred_companies: preferredCompanies,
+        application_limit: applicationLimit ? Number(applicationLimit) : undefined,
       })
       router.push('/employer/dashboard/jobs')
     } catch (err: any) {
@@ -258,6 +260,16 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
                 </div>
                 <input style={inp} placeholder="Or type custom  e.g. 2 months" value={noticePeriod} onChange={e => setNoticePeriod(e.target.value)} />
               </Field>
+
+              <Field label="Application Limit (Optional)">
+                <input
+                  style={inp} type="number" min={1} placeholder="e.g. 50 — leave blank for unlimited"
+                  value={applicationLimit} onChange={e => setApplicationLimit(e.target.value)}
+                />
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.62rem', color: '#96AFCA', marginTop: '5px' }}>
+                  This job will automatically pause once this many submissions are received. You can reopen it anytime.
+                </p>
+              </Field>
             </div>
           )}
 
@@ -325,6 +337,9 @@ export default function PostJobForm({ defaultWorkModel, defaultNoticePeriod }: {
                   </p>
                 ) : <p style={rv.empty}>Not specified</p>}
                 {noticePeriod && <p style={rv.secondary}>{noticePeriod} notice period</p>}
+                {applicationLimit && (
+                  <p style={rv.secondary}>Auto-pauses after <strong>{applicationLimit}</strong> applications</p>
+                )}
               </ReviewSection>
 
               {/* Requirements */}
