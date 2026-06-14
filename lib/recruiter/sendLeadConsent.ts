@@ -224,6 +224,7 @@ export async function submitLeadAsCandidate(leadId: string): Promise<SubmitLeadR
       portfolio_url:            lead.portfolio_url ?? null,
       resume_url:               lead.resume_url,
       recruiter_note:           '',
+      recruiter_name_snapshot:  recruiter.full_name ?? null,
       consent_status:           'pending_consent',
       consent_token:            consentToken,
       consent_token_expires_at: consentExpiry,

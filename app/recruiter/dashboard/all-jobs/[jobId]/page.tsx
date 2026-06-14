@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ShareLinkButton from '@/components/recruiter/ShareLinkButton'
@@ -30,10 +31,23 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
   const { jobId } = await params
   const supabase = await createClient()
 
-  const { data: job, error } = await supabase
-    .from('job_posts').select('*').eq('id', jobId).eq('status', 'active').single()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [{ data: job, error }, { data: recruiter }] = await Promise.all([
+    supabase.from('job_posts').select('*').eq('id', jobId).eq('status', 'active').single(),
+    supabase.from('recruiters').select('id').eq('user_id', user?.id ?? '').single(),
+  ])
 
   if (error || !job) notFound()
+
+  const admin = createAdminClient()
+  const { count: usedCount } = await admin
+    .from('candidate_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('recruiter_id', recruiter?.id ?? '')
+    .eq('job_post_id', jobId)
+  const slotsUsed = usedCount ?? 0
+  const slotsLeft = Math.max(0, 7 - slotsUsed)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -142,15 +156,35 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
 
       {/* Fixed CTA */}
       <div style={{ flexShrink: 0, paddingTop: '14px', borderTop: '1px solid #D0DBE8', marginTop: '4px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <Link
-          href={`/recruiter/dashboard/my-jobs/${job.id}/submit`}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '11px 24px', borderRadius: '10px', background: '#0FB9B1', color: '#fff', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}
-        >
-          Submit Candidate
-          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </Link>
+        {slotsLeft > 0 ? (
+          <Link
+            href={`/recruiter/dashboard/my-jobs/${job.id}/submit`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '11px 24px', borderRadius: '10px', background: '#0FB9B1', color: '#fff', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}
+          >
+            Submit Candidate
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        ) : (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '11px 20px', borderRadius: '10px', background: '#FEF2F2', border: '1.5px solid #FCA5A5', color: '#DC2626', fontWeight: 700, fontSize: '13px' }}>
+            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            All 7 Slots Used
+          </div>
+        )}
+
+        {/* Slot meter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: '#F5F8FC', border: `1px solid ${slotsLeft <= 2 ? '#FCA5A5' : '#D0DBE8'}` }}>
+          <div style={{ display: 'flex', gap: '3px' }}>
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} style={{ width: '7px', height: '7px', borderRadius: '50%', background: i < slotsUsed ? (slotsLeft <= 2 ? '#DC2626' : '#032655') : '#D0DBE8' }} />
+            ))}
+          </div>
+          <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.7rem', fontWeight: 700, color: slotsLeft <= 2 ? '#DC2626' : '#5A7A9F' }}>
+            {slotsLeft === 0 ? 'Full' : `${slotsLeft} slot${slotsLeft === 1 ? '' : 's'} left`}
+          </span>
+        </div>
+
         <ShareLinkButton jobId={job.id} />
       </div>
     </div>

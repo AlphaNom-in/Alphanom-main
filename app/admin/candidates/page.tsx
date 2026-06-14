@@ -68,7 +68,7 @@ export default async function AdminCandidatesPage({
   // Main query — apply filters + paginate
   let query = admin
     .from('candidate_submissions')
-    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, current_ctc, total_experience, consent_status, consent_token_expires_at, profile_unlocked, profile_unlocked_at, job_posts(title, employers(company_name)), recruiters(id, full_name)', { count: 'exact' })
+    .select('id, candidate_name, email, phone, current_job_title, current_company, status, submitted_at, current_ctc, total_experience, consent_status, consent_token_expires_at, profile_unlocked, profile_unlocked_at, recruiter_deleted, recruiter_name_snapshot, job_posts(title, employers(company_name)), recruiters(id, full_name)', { count: 'exact' })
     .order('submitted_at', { ascending: false })
     .range(from, to)
 
@@ -289,12 +289,26 @@ export default async function AdminCandidatesPage({
                     </td>
                     {/* Recruiter */}
                     <td style={{ padding: '12px 16px' }}>
-                      <Link
-                        href={`/admin/candidates?recruiter_id=${s.recruiters?.id}`}
-                        style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#5A7A9F', textDecoration: 'none', whiteSpace: 'nowrap' }}
-                      >
-                        {s.recruiters?.full_name ?? '—'}
-                      </Link>
+                      {s.recruiter_deleted ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#5A7A9F', whiteSpace: 'nowrap' }}>
+                            {s.recruiter_name_snapshot ?? 'Deleted Recruiter'}
+                          </span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontFamily: 'var(--font-ui)', fontSize: '0.6rem', fontWeight: 700, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '4px', padding: '1px 6px', width: 'fit-content' }}>
+                            <svg width="8" height="8" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Account Deleted
+                          </span>
+                        </div>
+                      ) : s.recruiters?.id ? (
+                        <Link
+                          href={`/admin/candidates?recruiter_id=${s.recruiters.id}`}
+                          style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#5A7A9F', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        >
+                          {s.recruiters.full_name ?? '—'}
+                        </Link>
+                      ) : (
+                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.75rem', color: '#D0DBE8' }}>—</span>
+                      )}
                     </td>
                     {/* CTC */}
                     <td style={{ padding: '12px 16px' }}>

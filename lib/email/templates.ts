@@ -1,3 +1,237 @@
+export function recruiterApprovedEmailHtml({
+  firstName,
+  fullName,
+  loginUrl,
+  jobsUrl,
+}: {
+  firstName: string
+  fullName: string
+  loginUrl: string
+  jobsUrl: string
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>You're approved on AlphaNom</title>
+</head>
+<body style="margin:0;padding:0;background:#F5F8FC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F5F8FC;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" role="presentation" style="max-width:520px;width:100%;">
+
+        <!-- Logo row -->
+        <tr><td style="padding-bottom:28px;">
+          <span style="font-size:18px;font-weight:700;color:#032655;letter-spacing:-0.03em;">Alpha<span style="color:#0FB9B1;">Nom</span></span>
+        </td></tr>
+
+        <!-- Card -->
+        <tr><td style="background:#ffffff;border:1px solid #D0DBE8;border-radius:8px;overflow:hidden;">
+
+          <!-- Top accent -->
+          <div style="height:3px;background:#0FB9B1;font-size:0;line-height:0;">&nbsp;</div>
+
+          <!-- Body -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+
+            <!-- Greeting -->
+            <tr><td style="padding:40px 40px 0;">
+              <p style="margin:0 0 24px;font-size:13px;font-weight:600;color:#0FB9B1;text-transform:uppercase;letter-spacing:0.08em;">Account Approved</p>
+              <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#032655;line-height:1.3;">Welcome aboard, ${firstName}.</h1>
+              <p style="margin:0;font-size:15px;color:#5A7A9F;line-height:1.7;">
+                Your recruiter profile has been reviewed and approved by the AlphaNom team.
+                You now have full access to the platform and can begin submitting candidates immediately.
+              </p>
+            </td></tr>
+
+            <!-- Divider -->
+            <tr><td style="padding:28px 40px 0;"><div style="height:1px;background:#EEF3F8;"></div></td></tr>
+
+            <!-- What's available -->
+            <tr><td style="padding:24px 40px 0;">
+              <p style="margin:0 0 16px;font-size:12px;font-weight:600;color:#96AFCA;text-transform:uppercase;letter-spacing:0.08em;">What you can do now</p>
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr><td style="padding:8px 0;border-bottom:1px solid #F5F8FC;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Browse active job openings from verified employers</td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="padding:8px 0;border-bottom:1px solid #F5F8FC;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Submit up to 7 candidate profiles per role</td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="padding:8px 0;border-bottom:1px solid #F5F8FC;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Share public application links to collect inbound leads</td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="padding:8px 0;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Track candidate consent and pipeline status in real time</td>
+                  </tr></table>
+                </td></tr>
+              </table>
+            </td></tr>
+
+            <!-- CTA -->
+            <tr><td style="padding:32px 40px 40px;">
+              <a href="${jobsUrl}" style="display:inline-block;padding:13px 28px;background:#0FB9B1;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;border-radius:6px;letter-spacing:-0.01em;">
+                Browse open jobs
+              </a>
+              <p style="margin:16px 0 0;font-size:13px;color:#96AFCA;">
+                Or <a href="${loginUrl}" style="color:#0FB9B1;text-decoration:none;font-weight:500;">go to your dashboard</a> directly.
+              </p>
+            </td></tr>
+
+          </table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:24px 0 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#96AFCA;line-height:1.7;">
+            AlphaNom &middot; India&rsquo;s Confidential Recruitment Network<br>
+            Sent to <span style="color:#5A7A9F;">${fullName}</span> &middot; Do not reply
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+export function employerApprovedEmailHtml({
+  companyName,
+  contactName,
+  loginUrl,
+  postJobUrl,
+}: {
+  companyName: string
+  contactName: string
+  loginUrl: string
+  postJobUrl: string
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${companyName} verified on AlphaNom</title>
+</head>
+<body style="margin:0;padding:0;background:#F5F8FC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F5F8FC;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" role="presentation" style="max-width:520px;width:100%;">
+
+        <!-- Logo row -->
+        <tr><td style="padding-bottom:28px;">
+          <span style="font-size:18px;font-weight:700;color:#032655;letter-spacing:-0.03em;">Alpha<span style="color:#0FB9B1;">Nom</span></span>
+        </td></tr>
+
+        <!-- Card -->
+        <tr><td style="background:#ffffff;border:1px solid #D0DBE8;border-radius:8px;overflow:hidden;">
+
+          <!-- Top accent -->
+          <div style="height:3px;background:#0FB9B1;font-size:0;line-height:0;">&nbsp;</div>
+
+          <!-- Body -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+
+            <!-- Greeting -->
+            <tr><td style="padding:40px 40px 0;">
+              <p style="margin:0 0 24px;font-size:13px;font-weight:600;color:#0FB9B1;text-transform:uppercase;letter-spacing:0.08em;">Company Verified</p>
+              <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#032655;line-height:1.3;">Hi ${contactName}, ${companyName} is now live.</h1>
+              <p style="margin:0;font-size:15px;color:#5A7A9F;line-height:1.7;">
+                Your employer account has been verified by the AlphaNom team.
+                You can now post jobs and start receiving curated candidates from our network of verified recruiters.
+              </p>
+            </td></tr>
+
+            <!-- Divider -->
+            <tr><td style="padding:28px 40px 0;"><div style="height:1px;background:#EEF3F8;"></div></td></tr>
+
+            <!-- What's available -->
+            <tr><td style="padding:24px 40px 0;">
+              <p style="margin:0 0 16px;font-size:12px;font-weight:600;color:#96AFCA;text-transform:uppercase;letter-spacing:0.08em;">What you can do now</p>
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr><td style="padding:8px 0;border-bottom:1px solid #F5F8FC;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Post job openings with full JD, requirements, and salary range</td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="padding:8px 0;border-bottom:1px solid #F5F8FC;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Receive pre-screened candidates directly from verified recruiters</td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="padding:8px 0;border-bottom:1px solid #F5F8FC;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Review, shortlist, and move candidates through your pipeline</td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="padding:8px 0;">
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:20px;vertical-align:top;padding-top:4px;font-size:0;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#0FB9B1;"></div>
+                    </td>
+                    <td style="font-size:14px;color:#032655;line-height:1.6;padding-left:10px;">Unlock candidate contact details after consent is confirmed</td>
+                  </tr></table>
+                </td></tr>
+              </table>
+            </td></tr>
+
+            <!-- CTA -->
+            <tr><td style="padding:32px 40px 40px;">
+              <a href="${postJobUrl}" style="display:inline-block;padding:13px 28px;background:#0FB9B1;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;border-radius:6px;letter-spacing:-0.01em;">
+                Post your first job
+              </a>
+              <p style="margin:16px 0 0;font-size:13px;color:#96AFCA;">
+                Or <a href="${loginUrl}" style="color:#0FB9B1;text-decoration:none;font-weight:500;">go to your dashboard</a> directly.
+              </p>
+            </td></tr>
+
+          </table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:24px 0 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#96AFCA;line-height:1.7;">
+            AlphaNom &middot; India&rsquo;s Confidential Recruitment Network<br>
+            Sent to <span style="color:#5A7A9F;">${companyName}</span> &middot; Do not reply
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 export function consentEmailHtml({
   candidateFirstName,
   recruiterName,

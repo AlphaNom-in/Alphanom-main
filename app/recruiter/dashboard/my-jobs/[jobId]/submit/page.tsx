@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import SubmitCandidateForm from '@/components/recruiter/SubmitCandidateForm'
+import SlotGateWrapper from '@/components/recruiter/SlotGateWrapper'
 
 export default async function Page({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = await params
@@ -18,12 +19,21 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
       .single(),
     supabase
       .from('recruiters')
-      .select('is_verified, years_of_experience, linkedin_url')
+      .select('id, is_verified, years_of_experience, linkedin_url')
       .eq('user_id', user?.id)
       .single(),
   ])
 
   if (error || !job) notFound()
+
+  // Count existing submissions for this recruiter + job
+  const admin = createAdminClient()
+  const { count: usedSlots } = await admin
+    .from('candidate_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('recruiter_id', recruiter?.id ?? '')
+    .eq('job_post_id', jobId)
+  const slotsUsed = usedSlots ?? 0
 
   const profileIncomplete =
     (!recruiter?.years_of_experience && recruiter?.years_of_experience !== 0) ||
@@ -115,7 +125,7 @@ export default async function Page({ params }: { params: Promise<{ jobId: string
       {/* Scrollable form */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <SubmitCandidateForm jobId={job.id} jobTitle={job.title} />
+          <SlotGateWrapper jobId={job.id} jobTitle={job.title} usedSlots={slotsUsed} />
         </div>
       </div>
     </div>

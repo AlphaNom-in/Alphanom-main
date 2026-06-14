@@ -1,7 +1,9 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/admin'
-import { revalidatePath }    from 'next/cache'
+import { createAdminClient }            from '@/lib/supabase/admin'
+import { revalidatePath }               from 'next/cache'
+import { sendBrevoEmail }               from '@/lib/email/brevo'
+import { recruiterApprovedEmailHtml, employerApprovedEmailHtml } from '@/lib/email/templates'
 
 // ─── Job actions ──────────────────────────────────────────────────────────────
 
@@ -26,15 +28,63 @@ export async function deleteJob(jobId: string) {
 
 export async function setRecruiterVerified(recruiterId: string, verified: boolean) {
   const admin = createAdminClient()
+
+  // Fetch profile before updating so we have email + name for the approval email
+  const { data: recruiter } = await admin
+    .from('recruiters')
+    .select('full_name, email')
+    .eq('id', recruiterId)
+    .single()
+
   const { error } = await admin.from('recruiters').update({ is_verified: verified }).eq('id', recruiterId)
   if (error) throw new Error(error.message)
+
+  // Send approval email only when verifying (not when revoking)
+  if (verified && recruiter?.email) {
+    const base      = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alphanom.in'
+    const firstName = (recruiter.full_name ?? 'there').split(' ')[0]
+    try {
+      await sendBrevoEmail({
+        to:       recruiter.email,
+        toName:   recruiter.full_name ?? undefined,
+        subject:  "You're approved — Start submitting candidates on AlphaNom",
+        html:     recruiterApprovedEmailHtml({
+          firstName,
+          fullName:  recruiter.full_name ?? recruiter.email,
+          loginUrl:  `${base}/recruiter/login`,
+          jobsUrl:   `${base}/recruiter/dashboard/all-jobs`,
+        }),
+        fromName: 'AlphaNom Team',
+      })
+    } catch (err) {
+      console.error('[setRecruiterVerified] approval email failed:', err)
+    }
+  }
+
   revalidatePath('/admin/recruiters')
   revalidatePath(`/admin/recruiters/${recruiterId}`)
 }
 
 export async function deleteRecruiter(recruiterId: string) {
   const admin = createAdminClient()
-  await admin.from('candidate_submissions').delete().eq('recruiter_id', recruiterId)
+
+  // Snapshot the recruiter name before deletion so submissions remain identifiable
+  const { data: recruiter } = await admin
+    .from('recruiters')
+    .select('full_name')
+    .eq('id', recruiterId)
+    .single()
+
+  // Preserve submissions — mark as recruiter_deleted, nullify FK, store name snapshot
+  await admin
+    .from('candidate_submissions')
+    .update({
+      recruiter_deleted:       true,
+      recruiter_name_snapshot: recruiter?.full_name ?? 'Deleted Recruiter',
+      recruiter_id:            null,
+    })
+    .eq('recruiter_id', recruiterId)
+
   const { error } = await admin.from('recruiters').delete().eq('id', recruiterId)
   if (error) throw new Error(error.message)
   revalidatePath('/admin/recruiters')
@@ -72,8 +122,37 @@ export async function updateRecruiter(recruiterId: string, fd: FormData) {
 
 export async function setEmployerVerified(employerId: string, verified: boolean) {
   const admin = createAdminClient()
+
+  const { data: employer } = await admin
+    .from('employers')
+    .select('company_name, email, contact_primary')
+    .eq('id', employerId)
+    .single()
+
   const { error } = await admin.from('employers').update({ is_verified: verified }).eq('id', employerId)
   if (error) throw new Error(error.message)
+
+  if (verified && employer?.email) {
+    const base        = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alphanom.in'
+    const contactName = employer.contact_primary ?? 'there'
+    try {
+      await sendBrevoEmail({
+        to:       employer.email,
+        toName:   employer.company_name ?? undefined,
+        subject:  `${employer.company_name ?? 'Your company'} is verified on AlphaNom — Start hiring`,
+        html:     employerApprovedEmailHtml({
+          companyName:  employer.company_name ?? 'Your Company',
+          contactName,
+          loginUrl:     `${base}/employer/login`,
+          postJobUrl:   `${base}/employer/dashboard/jobs/post`,
+        }),
+        fromName: 'AlphaNom Team',
+      })
+    } catch (err) {
+      console.error('[setEmployerVerified] approval email failed:', err)
+    }
+  }
+
   revalidatePath('/admin/employers')
   revalidatePath(`/admin/employers/${employerId}`)
 }

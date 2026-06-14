@@ -30,6 +30,21 @@ export async function submitCandidate(formData: FormData) {
   if (!resumeFile || resumeFile.size === 0) throw new Error('Resume is required')
 
   const admin    = createAdminClient()
+
+  const raw       = (key: string) => formData.get(key) as string
+  const optional  = (key: string) => raw(key) || null
+  const optNum    = (key: string) => { const v = raw(key); return v ? Number(v) : null }
+
+  const jobPostId = raw('job_post_id')
+
+  // Hard limit: 7 unique submissions per recruiter per job
+  const { count } = await admin
+    .from('candidate_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('recruiter_id', recruiter.id)
+    .eq('job_post_id', jobPostId)
+  if ((count ?? 0) >= 7) throw new Error('You have used all 7 submission slots for this role. No further submissions are allowed.')
+
   const ext      = resumeFile.name.split('.').pop()
   const filePath = `${recruiter.id}/${Date.now()}.${ext}`
 
@@ -40,11 +55,6 @@ export async function submitCandidate(formData: FormData) {
 
   const { data: { publicUrl } } = admin.storage.from('candidate-resumes').getPublicUrl(filePath)
 
-  const raw       = (key: string) => formData.get(key) as string
-  const optional  = (key: string) => raw(key) || null
-  const optNum    = (key: string) => { const v = raw(key); return v ? Number(v) : null }
-
-  const jobPostId      = raw('job_post_id')
   const ctcLPA         = optNum('current_ctc')
   const expectedCtcLPA = optNum('expected_ctc')
 
@@ -69,8 +79,9 @@ export async function submitCandidate(formData: FormData) {
       notice_period:     raw('notice_period'),
       linkedin_url:      raw('linkedin_url'),
       portfolio_url:     raw('portfolio_url'),
-      resume_url:        publicUrl,
-      recruiter_note:    raw('fit_reason'),
+      resume_url:               publicUrl,
+      recruiter_note:           raw('fit_reason'),
+      recruiter_name_snapshot:  recruiter.full_name ?? null,
       consent_status:              'pending_consent',
       consent_token:               consentToken,
       consent_token_expires_at:    consentExpiry,
