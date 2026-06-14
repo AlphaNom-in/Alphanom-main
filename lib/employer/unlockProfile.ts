@@ -4,7 +4,7 @@ import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath }    from 'next/cache'
 
-export async function unlockProfile(submissionId: string) {
+export async function markProfileViewed(submissionId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
@@ -22,7 +22,7 @@ export async function unlockProfile(submissionId: string) {
     .eq('id', submissionId)
     .single()
   if (!sub) throw new Error('Submission not found')
-  if (sub.profile_unlocked) return // already unlocked — no-op
+  if (sub.profile_unlocked) return // already viewed — no-op
 
   const { data: job } = await admin
     .from('job_posts').select('employer_id').eq('id', sub.job_post_id).single()

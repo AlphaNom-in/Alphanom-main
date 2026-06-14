@@ -239,9 +239,9 @@ export default async function Page() {
         <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #D0DBE8', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #EEF3F8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
             <div>
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 700, color: '#032655', margin: 0 }}>Recent Unlocked Profiles</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.85rem', fontWeight: 700, color: '#032655', margin: 0 }}>Recent Viewed Profiles</p>
               <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.65rem', color: '#96AFCA', margin: '2px 0 0' }}>
-                {totalCandidates} unlocked profile{totalCandidates !== 1 ? 's' : ''}
+                {totalCandidates} viewed profile{totalCandidates !== 1 ? 's' : ''}
               </p>
             </div>
             <Link href="/employer/dashboard/jobs" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.72rem', color: '#0FB9B1', fontWeight: 600, textDecoration: 'none' }}>

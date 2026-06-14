@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { unlockProfile } from '@/lib/employer/unlockProfile'
+import { markProfileViewed } from '@/lib/employer/unlockProfile'
 
 export default function UnlockButton({ submissionId }: { submissionId: string }) {
   const [pending, startTransition] = useTransition()
@@ -9,7 +9,7 @@ export default function UnlockButton({ submissionId }: { submissionId: string })
 
   function handleClick() {
     startTransition(async () => {
-      await unlockProfile(submissionId)
+      await markProfileViewed(submissionId)
       setDone(true)
     })
   }

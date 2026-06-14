@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import StatusSelect    from './StatusSelect'
-import { unlockProfile } from '@/lib/employer/unlockProfile'
+import { markProfileViewed } from '@/lib/employer/unlockProfile'
 
 type Applicant = {
   id: string
@@ -51,60 +51,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-/* Solid grey bar replacing locked text — redacted document style */
-function RedactedBar({ width = 140, height = 13, radius = 5 }: { width?: number | string; height?: number; radius?: number }) {
-  return (
-    <span style={{
-      display: 'inline-block',
-      width: typeof width === 'number' ? `${width}px` : width,
-      height: `${height}px`,
-      borderRadius: `${radius}px`,
-      background: '#CBD5E1',
-      verticalAlign: 'middle',
-      flexShrink: 0,
-    }} />
-  )
-}
-
-/* Disabled-looking ghost button for locked actions */
-function LockedBtn({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '5px',
-      padding: '8px 14px', borderRadius: '9px',
-      border: '1.5px solid #E2E8F0', background: '#F8FAFC',
-      fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600,
-      color: '#CBD5E1', cursor: 'default', userSelect: 'none',
-    }}>
-      {icon}
-      {label}
-    </span>
-  )
-}
-
-const LockIcon = ({ size = 13 }: { size?: number }) => (
-  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-  </svg>
-)
-
 export default function ApplicantsLayout({ applicants, jobId }: { applicants: Applicant[]; jobId: string }) {
-  const [selectedId,  setSelectedId]  = useState<string | null>(applicants[0]?.id ?? null)
-  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(
+  const [selectedId, setSelectedId] = useState<string | null>(applicants[0]?.id ?? null)
+  const [viewedIds,  setViewedIds]  = useState<Set<string>>(
     () => new Set(applicants.filter(a => a.profile_unlocked).map(a => a.id))
   )
-  const [pending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
-  const selected   = applicants.find(a => a.id === selectedId) ?? null
-  const st         = selected ? (STATUS[selected.status as keyof typeof STATUS] ?? STATUS.in_pipeline) : null
-  const isUnlocked = selected ? unlockedIds.has(selected.id) : false
-  const isLocked   = !isUnlocked
+  const selected = applicants.find(a => a.id === selectedId) ?? null
+  const st       = selected ? (STATUS[selected.status as keyof typeof STATUS] ?? STATUS.in_pipeline) : null
 
-  function handleUnlock(id: string) {
-    startTransition(async () => {
-      await unlockProfile(id)
-      setUnlockedIds(prev => new Set([...prev, id]))
-    })
+  function handleSelect(id: string) {
+    setSelectedId(id)
+    if (!viewedIds.has(id)) {
+      startTransition(async () => {
+        await markProfileViewed(id)
+        setViewedIds(prev => new Set([...prev, id]))
+      })
+    }
   }
 
   if (!applicants.length) {
@@ -133,17 +97,17 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
         scrollbarWidth: 'thin', scrollbarColor: '#D0DBE8 transparent',
       } as React.CSSProperties}>
         {applicants.map((a) => {
-          const ast      = STATUS[a.status as keyof typeof STATUS] ?? STATUS.in_pipeline
-          const isSel    = a.id === selectedId
-          const unlocked = unlockedIds.has(a.id)
+          const ast     = STATUS[a.status as keyof typeof STATUS] ?? STATUS.in_pipeline
+          const isSel   = a.id === selectedId
+          const isViewed = viewedIds.has(a.id)
           return (
             <button
               key={a.id}
               type="button"
-              onClick={() => setSelectedId(a.id)}
+              onClick={() => handleSelect(a.id)}
               style={{
                 width: '100%', textAlign: 'left',
-                background: isSel ? '#EEF3F8' : '#fff',
+                background: isSel ? '#EEF3F8' : isViewed ? '#fff' : '#F5F8FC',
                 borderRadius: '14px',
                 border: `1.5px solid ${isSel ? '#96AFCA' : '#D0DBE8'}`,
                 borderLeft: `4px solid ${isSel ? '#032655' : ast.accent}`,
@@ -156,37 +120,32 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
                 {/* Avatar */}
                 <div style={{
                   width: '46px', height: '46px', borderRadius: '11px', flexShrink: 0,
-                  background: unlocked ? 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)' : '#F1F5F9',
-                  border: unlocked ? 'none' : '1.5px solid #E2E8F0',
+                  background: isViewed ? 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)' : '#F1F5F9',
+                  border: isViewed ? 'none' : '1.5px solid #E2E8F0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: unlocked ? '0 3px 10px rgba(3,38,85,0.18)' : 'none',
+                  boxShadow: isViewed ? '0 3px 10px rgba(3,38,85,0.18)' : 'none',
                 }}>
-                  {unlocked ? (
+                  {isViewed ? (
                     <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '0.9rem', color: '#fff', letterSpacing: '-0.01em' }}>
                       {initials(a.candidate_name)}
                     </span>
                   ) : (
                     <svg width="18" height="18" fill="none" stroke="#94A3B8" strokeWidth={1.8} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                     </svg>
                   )}
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Name or redacted bar */}
-                  <div style={{ marginBottom: '4px', height: '18px', display: 'flex', alignItems: 'center' }}>
-                    {unlocked
-                      ? <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.9rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.01em' }}>{a.candidate_name}</span>
-                      : <RedactedBar width={130} height={13} />
-                    }
+                  {/* Name */}
+                  <div style={{ marginBottom: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '0.9rem', fontWeight: 800, color: '#032655', letterSpacing: '-0.01em' }}>{a.candidate_name}</span>
                   </div>
 
                   {/* Subtitle */}
                   {(a.current_job_title || a.current_company) && (
                     <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.76rem', color: '#3D5A7A', fontWeight: 600, margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {unlocked
-                        ? [a.current_job_title, a.current_company].filter(Boolean).join(' · ')
-                        : a.current_company ?? a.current_job_title ?? '—'}
+                      {[a.current_job_title, a.current_company].filter(Boolean).join(' · ')}
                     </p>
                   )}
 
@@ -242,35 +201,28 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
               {/* Avatar */}
               <div style={{
                 width: '64px', height: '64px', borderRadius: '16px', flexShrink: 0,
-                background: isUnlocked ? 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)' : '#F1F5F9',
-                border: isUnlocked ? 'none' : '2px solid #E2E8F0',
+                background: viewedIds.has(selected.id) ? 'linear-gradient(135deg, #032655 0%, #0FB9B1 100%)' : '#F1F5F9',
+                border: viewedIds.has(selected.id) ? 'none' : '2px solid #E2E8F0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: isUnlocked ? '0 6px 20px rgba(3,38,85,0.2)' : 'none',
+                boxShadow: viewedIds.has(selected.id) ? '0 6px 20px rgba(3,38,85,0.2)' : 'none',
               }}>
-                {isUnlocked ? (
+                {viewedIds.has(selected.id) ? (
                   <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 800, fontSize: '1.35rem', color: '#fff', letterSpacing: '-0.02em' }}>
                     {initials(selected.candidate_name)}
                   </span>
                 ) : (
                   <svg width="26" height="26" fill="none" stroke="#94A3B8" strokeWidth={1.6} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                   </svg>
                 )}
               </div>
 
               {/* Name block */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ marginBottom: '5px', height: '26px', display: 'flex', alignItems: 'center' }}>
-                  {isUnlocked
-                    ? <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.2rem', fontWeight: 800, color: '#032655', margin: 0, letterSpacing: '-0.03em' }}>{selected.candidate_name}</h2>
-                    : <RedactedBar width={180} height={18} radius={6} />
-                  }
-                </div>
+                <h2 style={{ fontFamily: 'var(--font-ui)', fontSize: '1.2rem', fontWeight: 800, color: '#032655', margin: '0 0 5px', letterSpacing: '-0.03em' }}>{selected.candidate_name}</h2>
                 {(selected.current_job_title || selected.current_company) && (
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.88rem', fontWeight: 600, color: '#5A7A9F', margin: '0 0 6px' }}>
-                    {isUnlocked
-                      ? [selected.current_job_title, selected.current_company].filter(Boolean).join(' · ')
-                      : selected.current_company ?? '—'}
+                    {[selected.current_job_title, selected.current_company].filter(Boolean).join(' · ')}
                   </p>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
@@ -298,78 +250,41 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
 
             {/* Action row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              {isLocked ? (
-                <>
-                  {/* Unlock CTA */}
-                  <button
-                    onClick={() => handleUnlock(selected.id)}
-                    disabled={pending}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '7px',
-                      padding: '9px 20px', borderRadius: '9px', border: 'none',
-                      background: pending ? '#96AFCA' : 'linear-gradient(135deg, #032655, #0FB9B1)',
-                      color: '#fff', fontFamily: 'var(--font-ui)', fontSize: '0.78rem', fontWeight: 700,
-                      cursor: pending ? 'not-allowed' : 'pointer',
-                      boxShadow: pending ? 'none' : '0 4px 14px rgba(3,38,85,0.22)',
-                    }}
-                  >
-                    {pending ? (
-                      <>
-                        <div style={{ width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.35)', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                        Unlocking…
-                      </>
-                    ) : (
-                      <>
-                        <LockIcon size={13} />
-                        Unlock Full Profile
-                      </>
-                    )}
-                  </button>
-                  {/* Ghost locked buttons */}
-                  <LockedBtn icon={<LockIcon size={12} />} label="Resume" />
-                  <LockedBtn icon={<LockIcon size={12} />} label="Email" />
-                  <LockedBtn icon={<LockIcon size={12} />} label="Call" />
-                  {selected.linkedin_url && <LockedBtn icon={<LockIcon size={12} />} label="LinkedIn" />}
-                </>
-              ) : (
-                <>
-                  {selected.resume_url && (
-                    <a href={selected.resume_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '9px', background: '#032655', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700 }}>
-                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                      View Resume
-                    </a>
-                  )}
-                  <StatusSelect submissionId={selected.id} jobId={jobId} currentStatus={selected.status} candidateName={selected.candidate_name} />
-                  {selected.email && (
-                    <a href={`mailto:${selected.email}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600 }}>
-                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                      Email
-                    </a>
-                  )}
-                  {selected.phone && (
-                    <a href={`tel:${selected.phone}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600 }}>
-                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                      Call
-                    </a>
-                  )}
-                  {selected.linkedin_url && (
-                    <a href={selected.linkedin_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#0A66C2', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
-                      LinkedIn
-                    </a>
-                  )}
-                  {selected.portfolio_url && (
-                    <a href={selected.portfolio_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700 }}>
-                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                      Portfolio
-                    </a>
-                  )}
-                </>
+              {selected.resume_url && (
+                <a href={selected.resume_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '9px', background: '#032655', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700 }}>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                  View Resume
+                </a>
+              )}
+              <StatusSelect submissionId={selected.id} jobId={jobId} currentStatus={selected.status} candidateName={selected.candidate_name} />
+              {selected.email && (
+                <a href={`mailto:${selected.email}`}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600 }}>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+                  Email
+                </a>
+              )}
+              {selected.phone && (
+                <a href={`tel:${selected.phone}`}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 600 }}>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                  Call
+                </a>
+              )}
+              {selected.linkedin_url && (
+                <a href={selected.linkedin_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#0A66C2', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                  LinkedIn
+                </a>
+              )}
+              {selected.portfolio_url && (
+                <a href={selected.portfolio_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '8px 14px', borderRadius: '9px', border: '1.5px solid #D0DBE8', background: '#fff', color: '#5A7A9F', textDecoration: 'none', fontFamily: 'var(--font-ui)', fontSize: '0.75rem', fontWeight: 700 }}>
+                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  Portfolio
+                </a>
               )}
             </div>
           </div>
@@ -377,7 +292,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
           {/* ── SCROLLABLE BODY ── */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '22px 28px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
 
-            {/* Why is this candidate a fit — always visible */}
+            {/* Why is this candidate a fit */}
             {selected.recruiter_note && (
               <div>
                 <SectionLabel>Why is this candidate a fit?</SectionLabel>
@@ -389,7 +304,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
               </div>
             )}
 
-            {/* Professional details — always visible */}
+            {/* Professional details */}
             {(selected.current_ctc != null || selected.notice_period || selected.total_experience != null || selected.current_location) && (
               <div>
                 <SectionLabel>Professional Details</SectionLabel>
@@ -422,7 +337,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
               </div>
             )}
 
-            {/* Contact — rows always shown; values redacted when locked */}
+            {/* Contact */}
             {(selected.email || selected.phone) && (
               <div>
                 <SectionLabel>Contact</SectionLabel>
@@ -434,10 +349,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
                       </div>
                       <div>
                         <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: '0 0 4px' }}>Email</p>
-                        {isUnlocked
-                          ? <a href={`mailto:${selected.email}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#032655', textDecoration: 'none', fontWeight: 500 }}>{selected.email}</a>
-                          : <RedactedBar width={200} height={12} />
-                        }
+                        <a href={`mailto:${selected.email}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#032655', textDecoration: 'none', fontWeight: 500 }}>{selected.email}</a>
                       </div>
                     </div>
                   )}
@@ -448,10 +360,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
                       </div>
                       <div>
                         <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: '0 0 4px' }}>Phone</p>
-                        {isUnlocked
-                          ? <a href={`tel:${selected.phone}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#032655', textDecoration: 'none', fontWeight: 500 }}>{selected.phone}</a>
-                          : <RedactedBar width={130} height={12} />
-                        }
+                        <a href={`tel:${selected.phone}`} style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#032655', textDecoration: 'none', fontWeight: 500 }}>{selected.phone}</a>
                       </div>
                     </div>
                   )}
@@ -459,7 +368,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
               </div>
             )}
 
-            {/* Links — always shown; URLs redacted when locked */}
+            {/* Links */}
             {(selected.linkedin_url || selected.portfolio_url) && (
               <div>
                 <SectionLabel>Links</SectionLabel>
@@ -471,10 +380,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: '0 0 4px' }}>LinkedIn</p>
-                        {isUnlocked
-                          ? <a href={selected.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#0A66C2', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', whiteSpace: 'nowrap' }}>{selected.linkedin_url}</a>
-                          : <RedactedBar width={240} height={12} />
-                        }
+                        <a href={selected.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#0A66C2', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', whiteSpace: 'nowrap' }}>{selected.linkedin_url}</a>
                       </div>
                     </div>
                   )}
@@ -485,10 +391,7 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontFamily: 'var(--font-ui)', fontSize: '0.55rem', fontWeight: 700, color: '#96AFCA', textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: '0 0 4px' }}>Portfolio</p>
-                        {isUnlocked
-                          ? <a href={selected.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#5A7A9F', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', whiteSpace: 'nowrap' }}>{selected.portfolio_url}</a>
-                          : <RedactedBar width={200} height={12} />
-                        }
+                        <a href={selected.portfolio_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-ui)', fontSize: '0.82rem', color: '#5A7A9F', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', whiteSpace: 'nowrap' }}>{selected.portfolio_url}</a>
                       </div>
                     </div>
                   )}
@@ -499,7 +402,6 @@ export default function ApplicantsLayout({ applicants, jobId }: { applicants: Ap
           </div>
         </div>
       )}
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }
